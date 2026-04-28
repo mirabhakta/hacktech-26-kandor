@@ -33,11 +33,11 @@ We're exploring kandor as a tool for K-12 and school-managed devices — giving 
 - Gemma 4 for deeper language understanding
 - K2 Think V2 (70B reasoning model by IFM) as the core reasoning engine — used for multi-step threat analysis across complex, ambiguous conversations
 
-## Built at
+## Originally Built at
 
 Hacktech 2026 — California Institute of Technology
 
-**Team:** Chris Rios, Mario Chong, Mira Bhakta, Jericho De Guzman
+**Contributors:** Chris Rios, Mario Chong, Mira Bhakta, Jericho De Guzman
 
 ## Links
 
