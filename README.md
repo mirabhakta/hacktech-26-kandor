@@ -1,6 +1,6 @@
 # kandor
 
-A Chrome extension that protects users from online predators, groomers, scammers, and manipulators — in real time.
+A Chrome extension that protects kids from online predators, groomers, scammers, and manipulators — in real time.
 
 ## What it does
 
@@ -13,7 +13,11 @@ Kandor runs quietly in the background as you browse supported social platforms. 
 
 ## Why we built it
 
-Online grooming and manipulation happen gradually and are hard to spot in the moment — especially for younger users. Kandor acts as a real-time safety layer, catching patterns that are easy to miss and giving users (and parents) the information they need to act.
+Online grooming and manipulation happen gradually and are hard to spot in the moment — especially for younger users. Kandor acts as a real-time safety layer on the platforms students already use, catching patterns that are easy to miss and giving parents and schools the information they need to act.
+
+## Vision: 
+
+We're exploring kandor as a tool for K-12 and school-managed devices — giving schools and parents a lightweight, real-time safety layer on the platforms students already use.
 
 ## Tech Stack
 
