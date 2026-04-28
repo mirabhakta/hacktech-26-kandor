@@ -1,0 +1,41 @@
+# kandor
+
+A Chrome extension that protects users from online predators, groomers, scammers, and manipulators — in real time.
+
+## What it does
+
+Kandor runs quietly in the background as you browse supported social platforms. It scans your conversations for signs of manipulation, grooming, and other online threats. When it detects something suspicious, it surfaces a clear alert with:
+
+- **Risk & confidence scores** — how dangerous and how certain
+- **Flagged messages** — exactly what was flagged and why
+- **Threat categories** — e.g. Trust grooming, Personal info request, Move off-platform
+- **Recommended action** — e.g. Block and alert guardian
+
+## Why we built it
+
+Online grooming and manipulation happen gradually and are hard to spot in the moment — especially for younger users. Kandor acts as a real-time safety layer, catching patterns that are easy to miss and giving users (and parents) the information they need to act.
+
+## Tech Stack
+
+**Frontend / Extension**
+- Chrome Extension APIs (Chromium / Edge compatible)
+- JavaScript, HTML, CSS
+
+**Backend**
+- Python, FastAPI
+
+**AI / NLP**
+- Rule-based NLP for fast, lightweight pattern detection
+- Gemma 4 for deeper language understanding
+- K2 Think V2 (70B reasoning model by IFM) as the core reasoning engine — used for multi-step threat analysis across complex, ambiguous conversations
+
+## Built at
+
+Hacktech 2026 — California Institute of Technology
+
+**Team:** Chris Rios, Mario Chong, Mira Bhakta, Jericho De Guzman
+
+## Links
+
+- 🌐 Landing page: [kandor.tech](https://kandor.tech)
+- 📋 Devpost: [devpost.com/software/kandor](https://devpost.com/software/kandor)
