@@ -44,7 +44,7 @@ await page.waitForTimeout(2000);
 const pill = await page.textContent("#resultPill");
 const failureStatus = await page.textContent("#analysisStatus");
 console.log("failure pill:", pill, "status:", failureStatus);
-if (!pill.includes("Failed")) throw new Error("Failure was not shown as failed");
+if (!pill.includes("Analysis failed")) throw new Error("Failure was not shown as failed");
 if (!failureStatus.includes("Analysis failed")) throw new Error("Failure status was not shown");
 
 await browser.close();
