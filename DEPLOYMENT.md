@@ -45,6 +45,16 @@ Health check: `http://127.0.0.1:8000/health`
 
 See `Backend/.env.example`.
 
+## Transitioning the existing Render service to main
+
+The merged `main` branch now contains the same `render.yaml`. To move the existing Blueprint-managed service to `main`:
+
+1. Open the existing Render service settings.
+2. Change the connected branch from `fix/production-readiness` to `main`.
+3. Keep the same Free plan and service name.
+4. Do not create a second service.
+5. Trigger a manual deploy if auto-deploy does not run.
+
 ## Recommended hosted deployment (Render free tier)
 
 1. Push the repository to GitHub (with approval).
