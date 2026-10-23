@@ -593,14 +593,10 @@ function renderFlaggedMessages(result) {
     "box-sizing:border-box",
     "width:100%",
     "margin-top:8px",
-    "padding:16px 18px",
-    "border-radius:20px",
-    "background:linear-gradient(135deg, rgba(255,255,255, 0.6), rgba(255,255,255, 0.35))",
-    "border:1px solid rgba(255,255,255,0.55)",
-    "box-shadow:0 20px 50px -12px rgba(99,102,241,0.18), 0 8px 24px rgba(15,23,42,0.08), inset 0 1px 0 0 rgba(255,255,255,0.45)",
-    "backdrop-filter:blur(20px) saturate(180%)",
-    "-webkit-backdrop-filter:blur(20px) saturate(180%)",
-    "color:#1f2937",
+    "padding:12px 14px",
+    "border-radius:10px",
+    "background:#f2f6f5",
+    "color:#14201f",
   ].join(";");
 
   const html = items
@@ -609,7 +605,7 @@ function renderFlaggedMessages(result) {
         <div style="${cardGlass}">
           <div style="color:#15803d;font-family:${KANDOR_FONT_SANS}"><b style="font-family:${KANDOR_FONT_SANS};font-weight:600">${escapeHtml(item.speaker || "unknown")}</b>: ${escapeHtml(item.text || "")}</div>
           ${reasonsBlock(item.reasons)}
-          <div style="margin-top:6px;color:#6b6a67;font-size:11px;">Matched phrases: ${escapeHtml((item.phrases || []).join(" | ") || "None")}</div>
+          <div style="margin-top:6px;color:#5b6a6a;font-size:11px;">Flagged wording: ${escapeHtml((item.phrases || []).join(" | ") || "None")}</div>
         </div>
       `,
     )
@@ -823,16 +819,16 @@ function getOrCreateFlagPopover() {
     "display:none",
     "max-width:min(90vw,320px)",
     "padding:12px 14px",
-    "border-radius:16px",
-    "border:0",
+    "border-radius:10px",
+    "border:1px solid #e2e8e7",
     "outline:0",
-    "box-shadow:0 20px 50px -12px rgba(99,102,241,0.2),0 8px 24px rgba(15,23,42,0.1)",
-    "background:linear-gradient(135deg,#eff6ff 0%,#ecfdf5 45%,#faf5ff 100%)",
+    "box-shadow:0 12px 32px -16px rgba(20,32,31,0.35)",
+    "background:#ffffff",
     `font-family:${KANDOR_FONT_SANS}`,
     "font-size:11px",
     "pointer-events:auto",
   ].join(";");
-  el.innerHTML = `<div class="ht-popover-brand" style="font-weight:600;font-size:14px;margin-bottom:4px;font-family:${KANDOR_FONT_SERIF};background:linear-gradient(135deg,#111827,#4b5563);-webkit-background-clip:text;background-clip:text;color:transparent;">${escapeHtml(APP_ALERT_TITLE)}</div><div class="ht-popover-title" style="font-weight:600;margin-bottom:8px;font-family:${KANDOR_FONT_SERIF};color:#4b5563;font-size:12px">Why it was flagged</div><div class="ht-popover-chips" style="display:flex;flex-wrap:wrap;gap:6px"></div>`;
+  el.innerHTML = `<div class="ht-popover-brand" style="font-weight:700;font-size:14px;margin-bottom:4px;font-family:${KANDOR_FONT_SERIF};color:#14201f;">${escapeHtml(APP_ALERT_TITLE)}</div><div class="ht-popover-title" style="font-weight:600;margin-bottom:8px;font-family:${KANDOR_FONT_SANS};color:#5b6a6a;font-size:12px">Why it was flagged</div><div class="ht-popover-chips" style="display:flex;flex-wrap:wrap;gap:6px"></div>`;
   el.addEventListener("pointerenter", () => cancelHideFlagPopover());
   el.addEventListener("pointerleave", () => scheduleHideFlagPopover());
   document.body.appendChild(el);
@@ -1044,21 +1040,18 @@ function showBanner(result, threshold) {
   const flaggedSection = renderFlaggedMessages(result);
   const evaluation = conciseEvaluation(result.evaluation);
   const riskDisplay = Math.round(Number(result?.danger_rating || 0));
-  const confDisplay = Math.round(
-    Number(result?.confidence_score ?? result?.confidence ?? 0),
-  );
+  const riskLabel = riskDisplay >= 80 ? "Severe concern" : riskDisplay >= 60 ? "High concern" : riskDisplay >= 40 ? "Moderate concern" : riskDisplay > 0 ? "Low concern" : "No strong concern";
   banner.innerHTML = `
     <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px;flex-wrap:wrap;">
-      <div style="font-weight:600;font-size:1.15rem;line-height:1.2;letter-spacing:-0.02em;max-width:14rem;font-family:${KANDOR_FONT_SERIF},serif;background:linear-gradient(135deg,#111827,#4b5563);-webkit-background-clip:text;background-clip:text;color:transparent">${escapeHtml(APP_ALERT_TITLE)}</div>
+      <div style="font-weight:700;font-size:1.15rem;line-height:1.2;letter-spacing:-0.02em;max-width:14rem;font-family:${KANDOR_FONT_SERIF},serif;color:#14201f">${escapeHtml(APP_ALERT_TITLE)}</div>
       <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end;">
-        <div style="padding:5px 10px;border-radius:999px;font-size:11px;font-weight:600;background:rgba(254,242,242,0.9);color:#b91c1c;border:1px solid rgba(252,165,165,0.5);backdrop-filter:blur(8px)">Risk ${riskDisplay}</div>
-        <div style="padding:5px 10px;border-radius:999px;font-size:11px;font-weight:600;background:rgba(255,255,255,0.5);color:#111827;border:1px solid rgba(255,255,255,0.5);backdrop-filter:blur(8px)">Confidence ${confDisplay}</div>
+        <div style="padding:5px 10px;border-radius:999px;font-size:11px;font-weight:700;background:#fdecea;color:#a4322b">${escapeHtml(riskLabel)}</div>
       </div>
     </div>
     <div style="font-size:12px;line-height:1.65;color:#374151">
       <div>${renderThreatChips(result.threats_detected || [])}</div>
       <div style="margin-top:8px;font-size:11px;color:#6b7280;">
-        ${escapeHtml(result?.fallback_used ? "Fallback analysis active (rules only)" : (result?.analysis_provider ? `Analysis provider: ${result.analysis_provider}` : "Analysis complete"))}
+        ${escapeHtml(result?.fallback_used ? "Rule-based analysis. Scores are heuristic, not probabilities." : "Model-assisted analysis. Scores are heuristic, not probabilities.")}
         ${window.location.pathname === "/demo" ? " · Demo conversation" : ""}
       </div>
       ${
@@ -1077,7 +1070,7 @@ function showBanner(result, threshold) {
     <div style="margin-top:12px;font-size:12px;line-height:1.45;color:#4b5563">
       <span style="font-family:${KANDOR_FONT_SANS};font-weight:600">Recommended action</span>: ${escapeHtml(conciseActionLabel(result.recommended_action || "monitor"))}
     </div>
-    <button id="hacktech-safety-close" type="button" style="margin-top:12px;width:100%;padding:9px 14px;cursor:pointer;font-weight:600;font-size:13px;border-radius:12px;border:none;color:#fff;background:linear-gradient(90deg,#2563eb,#0f766e);box-shadow:0 4px 14px rgba(79,70,229,0.35);font-family:${KANDOR_FONT_SANS}">I Understand</button>
+    <button id="hacktech-safety-close" type="button" style="margin-top:12px;width:100%;padding:9px 14px;cursor:pointer;font-weight:700;font-size:13px;border-radius:9px;border:none;color:#fff;background:#0f766e;font-family:${KANDOR_FONT_SANS}">I Understand</button>
   `;
 
   document.body.appendChild(banner);

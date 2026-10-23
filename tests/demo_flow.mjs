@@ -28,6 +28,14 @@ danger = await page.textContent("#danger");
 console.log("after add danger:", danger);
 if (Number(danger) < 70) throw new Error("Expected high risk after adding concerning message");
 
+// Add a second message and verify earlier messages are kept.
+await page.fill("#messageInput", "Do not tell anyone about this either.");
+await page.click("#addMessage");
+await page.waitForTimeout(1500);
+const threadText = await page.textContent("#thread");
+if (!threadText.includes("Please do not tell anyone about this.")) throw new Error("First added message was lost");
+if (!threadText.includes("Do not tell anyone about this either.")) throw new Error("Second added message missing");
+
 // Switch to safe conversation and verify warnings clear.
 await page.click('[data-id="mia"]');
 await page.waitForFunction(() => Number(document.querySelector("#danger").textContent) < 40, { timeout: 10000 });
