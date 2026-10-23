@@ -104,6 +104,54 @@ def test_benign_clothing_question_not_sexual():
     assert body["danger_rating"] < 40
 
 
+def test_harassment_detected():
+    payload = {
+        "platform": "generic",
+        "messages": [
+            {"speaker": "sender", "text": "You are worthless and nobody wants you."},
+            {"speaker": "receiver", "text": "Please stop."},
+            {"speaker": "sender", "text": "Everyone hates you."},
+        ],
+    }
+    r = client.post("/v1/evaluate", json=payload)
+    assert r.status_code == 200
+    body = r.json()
+    assert body["danger_rating"] >= 20
+    assert "HATE_HARASSMENT" in body["threats_detected"]
+
+
+def test_pii_solicitation_detected():
+    payload = {
+        "platform": "generic",
+        "messages": [
+            {"speaker": "sender", "text": "Where do you live and what school do you go to?"},
+            {"speaker": "receiver", "text": "Why?"},
+            {"speaker": "sender", "text": "Send me your address so I can visit."},
+        ],
+    }
+    r = client.post("/v1/evaluate", json=payload)
+    assert r.status_code == 200
+    body = r.json()
+    assert body["danger_rating"] >= 40
+    assert "PII_SOLICITATION" in body["threats_detected"]
+
+
+def test_off_platform_detected():
+    payload = {
+        "platform": "generic",
+        "messages": [
+            {"speaker": "sender", "text": "Let's move to WhatsApp and Snapchat."},
+            {"speaker": "receiver", "text": "Why not stay here?"},
+            {"speaker": "sender", "text": "Text me instead, it's more private."},
+        ],
+    }
+    r = client.post("/v1/evaluate", json=payload)
+    assert r.status_code == 200
+    body = r.json()
+    assert body["danger_rating"] >= 20
+    assert "PLATFORM_MIGRATION" in body["threats_detected"]
+
+
 def test_party_planning_low_risk():
     payload = {
         "platform": "generic",
