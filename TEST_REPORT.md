@@ -18,6 +18,7 @@ node tests/e2e_extension.mjs
 - Instagram synthetic extraction fixture: passed (3 messages, sidebar excluded).
 - Integrated demo flow: passed (selection, analysis, message addition, safe switch, failure handling).
 - XSS regression: passed (malicious synthetic strings did not execute).
+- Design QA screenshots captured at 390px, 768px, and 1440px.
 - Backend tests: 14 passed.
 - Backend health check and demo routes: passed.
 - Docker build: not verified (Docker daemon unavailable).
