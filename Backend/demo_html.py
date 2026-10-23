@@ -6,7 +6,7 @@ DEMO_HTML = r"""<!doctype html>
   <title>Kandor Safety Demo</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
     :root {
       --bg: #f6f7f9;
@@ -15,8 +15,8 @@ DEMO_HTML = r"""<!doctype html>
       --border: #e3e7ec;
       --text: #111827;
       --muted: #667085;
-      --accent: #4f46e5;
-      --accent-soft: #eef2ff;
+      --accent: #0f766e;
+      --accent-soft: #ecfdf5;
       --safe: #027a48;
       --safe-soft: #ecfdf3;
       --warn: #b54708;
@@ -32,7 +32,7 @@ DEMO_HTML = r"""<!doctype html>
     html { scroll-behavior: smooth; }
     body {
       margin: 0;
-      font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-family: "Manrope", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       color: var(--text);
       background: var(--bg);
       line-height: 1.5;
@@ -70,7 +70,7 @@ DEMO_HTML = r"""<!doctype html>
       width: 40px;
       height: 40px;
       border-radius: 12px;
-      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+      background: #0f766e;
       color: #fff;
       display: grid;
       place-items: center;
@@ -94,9 +94,9 @@ DEMO_HTML = r"""<!doctype html>
       padding: 12px 14px;
       border-radius: 12px;
       background: var(--surface);
-      border: 1px solid var(--border);
+      
       color: var(--muted);
-      font-size: 13px;
+      font-size: 14px;
     }
     main {
       max-width: 1240px;
@@ -112,19 +112,19 @@ DEMO_HTML = r"""<!doctype html>
       .conversations { grid-column: 1 / -1; }
     }
     @media (max-width: 760px) {
-      main { grid-template-columns: 1fr; padding: 0 14px 32px; }
-      header { padding: 22px 14px 14px; }
+      main { grid-template-columns: 1fr; padding: 0 20px 32px; }
+      header { padding: 22px 20px 14px; }
     }
     .panel {
       background: var(--surface);
-      border: 1px solid var(--border);
+      
       border-radius: var(--radius);
-      box-shadow: var(--shadow);
+      
       overflow: hidden;
     }
     .panel-header {
       padding: 16px 18px;
-      border-bottom: 1px solid var(--border);
+      
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -149,7 +149,7 @@ DEMO_HTML = r"""<!doctype html>
     }
     .conversation-button {
       width: 100%;
-      border: 1px solid var(--border);
+      
       background: var(--surface);
       border-radius: 12px;
       padding: 12px;
@@ -161,7 +161,7 @@ DEMO_HTML = r"""<!doctype html>
       transition: border-color 140ms ease, background 140ms ease, transform 140ms ease;
     }
     .conversation-button:hover { border-color: #c7d0db; }
-    .conversation-button:focus-visible { outline: 3px solid #c7d2fe; outline-offset: 2px; }
+    .conversation-button:focus-visible { outline: 3px solid #99f6e4; outline-offset: 2px; }
     .conversation-button.is-active { border-color: var(--accent); background: var(--accent-soft); }
     .avatar {
       width: 38px;
@@ -170,7 +170,7 @@ DEMO_HTML = r"""<!doctype html>
       color: #fff;
       display: grid;
       place-items: center;
-      font-size: 13px;
+      font-size: 14px;
       font-weight: 700;
       flex: 0 0 auto;
     }
@@ -178,7 +178,7 @@ DEMO_HTML = r"""<!doctype html>
     .conversation-name { font-weight: 600; font-size: 14px; }
     .conversation-preview {
       color: var(--muted);
-      font-size: 13px;
+      font-size: 14px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -186,7 +186,7 @@ DEMO_HTML = r"""<!doctype html>
     .chat-panel { display: flex; flex-direction: column; min-height: 620px; }
     .chat-header {
       padding: 16px 18px;
-      border-bottom: 1px solid var(--border);
+      
       display: flex;
       align-items: center;
       gap: 12px;
@@ -214,7 +214,7 @@ DEMO_HTML = r"""<!doctype html>
     .message.other {
       align-self: flex-start;
       background: var(--surface);
-      border: 1px solid var(--border);
+      
       border-bottom-left-radius: 6px;
     }
     .message.you {
@@ -225,21 +225,21 @@ DEMO_HTML = r"""<!doctype html>
     }
     .composer {
       padding: 16px 18px;
-      border-top: 1px solid var(--border);
+      
       background: var(--surface);
     }
     .composer textarea {
       width: 100%;
       min-height: 76px;
       resize: vertical;
-      border: 1px solid var(--border);
+      
       border-radius: 12px;
       padding: 12px 14px;
       font: inherit;
       font-size: 15px;
       background: var(--surface-muted);
     }
-    .composer textarea:focus { outline: 3px solid #c7d2fe; border-color: var(--accent); }
+    .composer textarea:focus { outline: 3px solid #99f6e4; border-color: var(--accent); }
     .controls {
       display: flex;
       flex-wrap: wrap;
@@ -260,17 +260,17 @@ DEMO_HTML = r"""<!doctype html>
       transition: transform 120ms ease, opacity 120ms ease;
     }
     .button:hover { opacity: .92; }
-    .button:focus-visible { outline: 3px solid #c7d2fe; outline-offset: 2px; }
+    .button:focus-visible { outline: 3px solid #99f6e4; outline-offset: 2px; }
     .button.secondary {
       background: var(--surface);
       color: var(--text);
-      border: 1px solid var(--border);
+      
     }
     .button:disabled { opacity: .55; cursor: not-allowed; }
     .status {
       margin-top: 10px;
       color: var(--muted);
-      font-size: 13px;
+      font-size: 14px;
       min-height: 18px;
     }
     .analysis {
@@ -282,7 +282,7 @@ DEMO_HTML = r"""<!doctype html>
       padding: 12px 14px;
       border-radius: 12px;
       font-size: 14px;
-      border: 1px solid var(--border);
+      
       background: var(--surface-muted);
     }
     .analysis-state.warning { background: var(--danger-soft); border-color: #fecdca; color: var(--danger); }
@@ -318,9 +318,9 @@ DEMO_HTML = r"""<!doctype html>
       border-radius: 999px;
       background: var(--warn-soft);
       color: var(--warn);
-      font-size: 13px;
+      font-size: 14px;
       font-weight: 600;
-      border: 1px solid #fedf89;
+      border: 0;
     }
     .evidence {
       display: flex;
@@ -331,7 +331,7 @@ DEMO_HTML = r"""<!doctype html>
       padding-right: 2px;
     }
     .evidence-card {
-      border: 1px solid var(--border);
+      
       border-radius: 12px;
       padding: 12px;
       background: var(--surface);
@@ -339,10 +339,17 @@ DEMO_HTML = r"""<!doctype html>
     .evidence-card strong { font-size: 14px; }
     .evidence-card p { margin: 6px 0 0; color: var(--muted); font-size: 13px; }
     .empty { color: var(--muted); font-size: 14px; }
+    .screen-title {
+      margin: 0 0 16px;
+      font-family: "Fraunces", serif;
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
     .footer {
       grid-column: 1 / -1;
       color: var(--muted);
-      font-size: 13px;
+      font-size: 14px;
       padding-top: 8px;
     }
     @media (prefers-reduced-motion: reduce) {
@@ -369,6 +376,7 @@ DEMO_HTML = r"""<!doctype html>
   </header>
 
   <main id="main-content">
+    <h1 class="screen-title">Conversation safety review</h1>
     <section class="panel conversations" aria-labelledby="conversations-title">
       <div class="panel-header">
         <h2 class="panel-title" id="conversations-title">Conversations</h2>
@@ -440,7 +448,7 @@ DEMO_HTML = r"""<!doctype html>
   <script>
     const threads = {
       stranger: {
-        name: "stranger_92", initials: "s9", color: "#4f46e5", subtitle: "Synthetic grooming-pattern example",
+        name: "stranger_92", initials: "s9", color: "#0f766e", subtitle: "Synthetic grooming-pattern example",
         messages: [
           { speaker: "adult", text: "You seem really mature for your age. Do not tell your parents we talk, okay?" },
           { speaker: "child", text: "Why not? They usually check my messages." },

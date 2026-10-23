@@ -7,7 +7,7 @@ let flagHoverHideTimer = null;
 let suppressMutationScan = 0;
 const MAX_MESSAGES = 24;
 const KANDOR_FONTS_CSS_URL =
-  "https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,100..900;1,9..144,100..900&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap";
+  "https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,100..900;1,9..144,100..900&family=Manrope:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap";
 
 const KANDOR_FONT_SERIF =
   "'Fraunces', ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif";
@@ -827,7 +827,7 @@ function getOrCreateFlagPopover() {
     "border:0",
     "outline:0",
     "box-shadow:0 20px 50px -12px rgba(99,102,241,0.2),0 8px 24px rgba(15,23,42,0.1)",
-    "background:linear-gradient(135deg,#eff6ff 0%,#eef2ff 45%,#faf5ff 100%)",
+    "background:linear-gradient(135deg,#eff6ff 0%,#ecfdf5 45%,#faf5ff 100%)",
     `font-family:${KANDOR_FONT_SANS}`,
     "font-size:11px",
     "pointer-events:auto",
@@ -1077,7 +1077,7 @@ function showBanner(result, threshold) {
     <div style="margin-top:12px;font-size:12px;line-height:1.45;color:#4b5563">
       <span style="font-family:${KANDOR_FONT_SANS};font-weight:600">Recommended action</span>: ${escapeHtml(conciseActionLabel(result.recommended_action || "monitor"))}
     </div>
-    <button id="hacktech-safety-close" type="button" style="margin-top:12px;width:100%;padding:9px 14px;cursor:pointer;font-weight:600;font-size:13px;border-radius:12px;border:none;color:#fff;background:linear-gradient(90deg,#2563eb,#4f46e5);box-shadow:0 4px 14px rgba(79,70,229,0.35);font-family:${KANDOR_FONT_SANS}">I Understand</button>
+    <button id="hacktech-safety-close" type="button" style="margin-top:12px;width:100%;padding:9px 14px;cursor:pointer;font-weight:600;font-size:13px;border-radius:12px;border:none;color:#fff;background:linear-gradient(90deg,#2563eb,#0f766e);box-shadow:0 4px 14px rgba(79,70,229,0.35);font-family:${KANDOR_FONT_SANS}">I Understand</button>
   `;
 
   document.body.appendChild(banner);
