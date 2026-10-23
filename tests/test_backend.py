@@ -83,10 +83,41 @@ def test_demo_page():
     assert "stranger_92" in r.text
 
 
-def test_demo_console():
-    r = client.get("/demo/console")
+def test_demo_console_redirect():
+    r = client.get("/demo/console", follow_redirects=False)
+    assert r.status_code in (301, 302, 303, 307, 308)
+    assert r.headers.get("location", "").endswith("/demo")
+
+
+def test_benign_clothing_question_not_sexual():
+    payload = {
+        "platform": "generic",
+        "messages": [
+            {"speaker": "sender", "text": "What are you wearing to the party?"},
+            {"speaker": "receiver", "text": "Just jeans and a hoodie."},
+        ],
+    }
+    r = client.post("/v1/evaluate", json=payload)
     assert r.status_code == 200
-    assert "Kandor Safety Demo" in r.text
+    body = r.json()
+    assert "SEXUAL_CONTENT" not in body["threats_detected"]
+    assert body["danger_rating"] < 40
+
+
+def test_party_planning_low_risk():
+    payload = {
+        "platform": "generic",
+        "messages": [
+            {"speaker": "sender", "text": "What time should we arrive at the party?"},
+            {"speaker": "receiver", "text": "Around 7, bring snacks."},
+            {"speaker": "sender", "text": "Sounds good, see you then."},
+        ],
+    }
+    r = client.post("/v1/evaluate", json=payload)
+    assert r.status_code == 200
+    body = r.json()
+    assert body["danger_rating"] < 40
+    assert body["recommended_action"] in {"none", "monitor"}
 
 
 def test_unsafe_multi_message():

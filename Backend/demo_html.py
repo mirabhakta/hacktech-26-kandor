@@ -218,36 +218,84 @@ DEMO_HTML = r"""<!doctype html>
       const labels = {GROOMING:"Trust grooming", SEXUAL_CONTENT:"Sexual content", PII_SOLICITATION:"Personal info request", PLATFORM_MIGRATION:"Move off-platform", THREATS_COERCION:"Threats or coercion", SELF_HARM_CONTENT:"Self-harm content", HATE_HARASSMENT:"Harassment", FINANCIAL_SCAM:"Financial scam", OBFUSCATION:"Hidden language"};
       return labels[t] || t;
     }
+    function actionLabel(action){
+      const labels = {none:"No action needed", monitor:"Monitor", warn_user:"Warn the user", block_and_alert_guardian:"Block and alert a guardian"};
+      return labels[action] || action || "Monitor";
+    }
+    function riskLevel(danger){
+      if (danger >= 80) return "Severe";
+      if (danger >= 60) return "High";
+      if (danger >= 40) return "Moderate";
+      if (danger > 0) return "Low";
+      return "None detected";
+    }
 
     function renderResult(result){
       const danger = Number(result?.danger_rating || 0);
       const confidence = Number(result?.confidence_score ?? result?.confidence ?? 0);
-      document.getElementById("resultPill").textContent = danger >= 40 ? "Risk " + danger : (danger > 0 ? "Monitor " + danger : "Clear");
+      document.getElementById("resultPill").textContent = danger > 0 ? riskLevel(danger) + " risk (" + danger + ")" : "Clear";
       document.getElementById("resultPill").className = "pill " + (danger >= 40 ? "pillRisk" : "pillSafe");
       document.getElementById("danger").textContent = danger;
       document.getElementById("confidence").textContent = confidence;
       document.getElementById("mode").textContent = result?.fallback_used ? "Fallback (rules only)" : (result?.analysis_provider || "unknown");
-      document.getElementById("action").textContent = result?.recommended_action || "none";
+      document.getElementById("action").textContent = actionLabel(result?.recommended_action || "none");
       const threats = Array.isArray(result?.threats_detected) ? result.threats_detected : [];
-      document.getElementById("threats").innerHTML = threats.length ? threats.map(t=>'<span class="chip">'+threatLabel(t)+'</span>').join("") : "None";
+      const threatsEl = document.getElementById("threats");
+      threatsEl.textContent = "";
+      if (!threats.length) {
+        threatsEl.textContent = "None";
+      } else {
+        for (const t of threats) {
+          const chip = document.createElement("span");
+          chip.className = "chip";
+          chip.textContent = threatLabel(t);
+          threatsEl.appendChild(chip);
+        }
+      }
       document.getElementById("evaluation").textContent = result?.evaluation || "";
       const flagged = Array.isArray(result?.flagged_messages) ? result.flagged_messages : [];
       const flaggedEl = document.getElementById("flagged");
-      flaggedEl.innerHTML = "";
+      flaggedEl.textContent = "";
       if (flagged.length){
         for (const item of flagged){
           const div = document.createElement("div");
           div.className = "flag";
-          div.innerHTML = "<div><b>" + (item.speaker || "unknown") + ":</b> " + (item.text || "") + "</div><div class='muted' style='margin-top:4px'>Reasons: " + ((item.reasons||[]).map(threatLabel).join(", ") || "None") + "</div><div class='muted' style='margin-top:4px'>Matched: " + ((item.phrases||[]).join(" | ") || "None") + "</div>";
+          const line = document.createElement("div");
+          const speaker = document.createElement("b");
+          speaker.textContent = (item.speaker || "unknown") + ":";
+          line.appendChild(speaker);
+          line.appendChild(document.createTextNode(" " + (item.text || "")));
+          div.appendChild(line);
+          const reasons = document.createElement("div");
+          reasons.className = "muted";
+          reasons.style.marginTop = "4px";
+          reasons.textContent = "Reasons: " + (((item.reasons||[]).map(threatLabel).join(", ")) || "None");
+          div.appendChild(reasons);
+          const matched = document.createElement("div");
+          matched.className = "muted";
+          matched.style.marginTop = "4px";
+          matched.textContent = "Matched: " + (((item.phrases||[]).join(" | ")) || "None");
+          div.appendChild(matched);
           flaggedEl.appendChild(div);
         }
       } else if (result?.highest_risk_message){
         const div = document.createElement("div");
         div.className = "flag";
-        div.innerHTML = "<div><b>Highest-risk excerpt</b></div><div style='margin-top:6px'>" + result.highest_risk_message + "</div>";
+        const title = document.createElement("div");
+        const b = document.createElement("b");
+        b.textContent = "Highest-risk excerpt";
+        title.appendChild(b);
+        div.appendChild(title);
+        const body = document.createElement("div");
+        body.style.marginTop = "6px";
+        body.textContent = result.highest_risk_message;
+        div.appendChild(body);
         flaggedEl.appendChild(div);
       } else {
-        flaggedEl.innerHTML = "<div class='muted'>No message-level evidence returned.</div>";
+        const empty = document.createElement("div");
+        empty.className = "muted";
+        empty.textContent = "No message-level evidence returned.";
+        flaggedEl.appendChild(empty);
       }
       document.getElementById("analysisStatus").className = "banner";
       document.getElementById("analysisStatus").textContent = danger >= 40 ? "Kandor detected a concerning pattern in this synthetic conversation." : "No strong concerning pattern detected in this synthetic conversation.";
@@ -260,9 +308,14 @@ DEMO_HTML = r"""<!doctype html>
       document.getElementById("confidence").textContent = "-";
       document.getElementById("mode").textContent = "Unavailable";
       document.getElementById("action").textContent = "No conclusion";
-      document.getElementById("threats").innerHTML = "None";
+      document.getElementById("threats").textContent = "None";
       document.getElementById("evaluation").textContent = "";
-      document.getElementById("flagged").innerHTML = "<div class='muted'>Analysis failed. Kandor did not mark this conversation as safe.</div>";
+      const failedMsg = document.createElement("div");
+      failedMsg.className = "muted";
+      failedMsg.textContent = "Analysis failed. Kandor did not mark this conversation as safe.";
+      const flaggedEl2 = document.getElementById("flagged");
+      flaggedEl2.textContent = "";
+      flaggedEl2.appendChild(failedMsg);
       const status = document.getElementById("analysisStatus");
       status.className = "banner error";
       status.textContent = message || "Analysis failed. No safety conclusion was produced.";
@@ -320,7 +373,29 @@ DEMO_HTML = r"""<!doctype html>
       btn.type = "button";
       btn.className = "conv";
       btn.setAttribute("data-id", id);
-      btn.innerHTML = '<div class="avatar" style="background:'+meta.grad+'">'+meta.initials+'</div><div class="conv-body"><div class="conv-top"><span class="conv-name">'+meta.name+'</span><span class="conv-time">demo</span></div><div class="conv-preview">'+(meta.messages[meta.messages.length-1]?.text || "")+'</div></div>';
+      const avatar = document.createElement("div");
+      avatar.className = "avatar";
+      avatar.style.background = meta.grad;
+      avatar.textContent = meta.initials;
+      const body = document.createElement("div");
+      body.className = "conv-body";
+      const top = document.createElement("div");
+      top.className = "conv-top";
+      const name = document.createElement("span");
+      name.className = "conv-name";
+      name.textContent = meta.name;
+      const time = document.createElement("span");
+      time.className = "conv-time";
+      time.textContent = "demo";
+      top.appendChild(name);
+      top.appendChild(time);
+      const preview = document.createElement("div");
+      preview.className = "conv-preview";
+      preview.textContent = meta.messages[meta.messages.length-1]?.text || "";
+      body.appendChild(top);
+      body.appendChild(preview);
+      btn.appendChild(avatar);
+      btn.appendChild(body);
       btn.addEventListener("click", ()=>setActiveInbox(id));
       inboxList.appendChild(btn);
     }

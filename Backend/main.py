@@ -74,10 +74,11 @@ async def demo():
     return DEMO_HTML
 
 
-@app.get("/demo/console", response_class=HTMLResponse)
-async def demo_console():
-    with open(os.path.join(os.path.dirname(__file__), "demo_console.html"), encoding="utf-8") as f:
-        return f.read()
+@app.get("/demo/console")
+async def demo_console_redirect():
+    from fastapi.responses import RedirectResponse
+
+    return RedirectResponse(url="/demo", status_code=307)
 
 
 if __name__ == "__main__":

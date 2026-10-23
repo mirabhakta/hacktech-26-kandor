@@ -187,7 +187,7 @@ RISK_RULES = [
 
     PatternRule("SEXUAL_CONTENT", 45, r"\bnude\b", severity="critical"),
     PatternRule("SEXUAL_CONTENT", 45, r"\bshow me (your body|yourself)\b", severity="critical"),
-    PatternRule("SEXUAL_CONTENT", 34, r"\bwhat are you wearing\b", severity="high"),
+    PatternRule("SEXUAL_CONTENT", 34, r"\bwhat are you wearing\b(?!\s+(today|tomorrow)\b)(?!\s+(to|for)\s+(the|a|an|my|our|your)?\s*(party|school|event|wedding|picnic|game|concert|dinner)\b)", severity="high"),
     PatternRule("SEXUAL_CONTENT", 36, r"\bsend (me )?(a )?(pic|photo|selfie)\b", severity="high", sender_only_bonus=4),
     PatternRule("SEXUAL_CONTENT", 24, r"\bsexy\b"),
     PatternRule("SEXUAL_CONTENT", 28, r"\bturn me on\b", severity="high"),
