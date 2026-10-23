@@ -3,166 +3,325 @@ DEMO_HTML = r"""<!doctype html>
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
-  <title>Kandor synthetic messaging demo</title>
+  <title>Kandor safety review</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --ig-bg:#fafafa; --ig-surface:#fff; --ig-line:#dbdbdb; --ig-incoming:#efefef;
-      --ig-outgoing1:#3797f0; --ig-outgoing2:#6b4eff; --ig-text:#262626; --ig-sub:#8e8e8e;
-      --kandor:#4f46e5;
+      --frame: #edf1f0;
+      --sheet: #ffffff;
+      --edge: #e2e8e7;
+      --text: #14201f;
+      --muted: #5b6a6a;
+      --accent: #0f766e;
+      --accent-soft: #e5f4f1;
+      --safe: #176b55;
+      --safe-soft: #e8f5ef;
+      --warn: #8a5a00;
+      --warn-soft: #fdf3dd;
+      --danger: #a4322b;
+      --danger-soft: #fdecea;
+      --evidence: #b7791f;
+      --sans: "Manrope", system-ui, sans-serif;
+      --display: "Fraunces", Georgia, serif;
     }
-    * { box-sizing:border-box; }
-    body { margin:0; font-family:Inter,system-ui,sans-serif; background:linear-gradient(135deg,#eff6ff,#eef2ff 45%,#faf5ff); color:var(--ig-text); }
-    .page { min-height:100vh; padding:16px; }
-    .shell { max-width:1180px; margin:0 auto; display:grid; grid-template-columns:300px minmax(0,1fr) 360px; gap:16px; }
-    @media (max-width:1000px){ .shell { grid-template-columns:1fr; } }
-    .card { background:rgba(255,255,255,.72); border:1px solid rgba(255,255,255,.6); border-radius:20px; box-shadow:0 20px 50px -12px rgba(99,102,241,.18); backdrop-filter:blur(16px); overflow:hidden; }
-    .inbox { min-height:560px; display:flex; flex-direction:column; }
-    .inbox-top { padding:12px 14px; border-bottom:1px solid var(--ig-line); display:flex; align-items:center; justify-content:space-between; }
-    .wordmark { font-weight:700; display:flex; align-items:center; gap:8px; }
-    .logo { width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888); color:#fff;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800; }
-    .conv { width:100%; border:none; background:#fff; text-align:left; padding:10px 14px; display:flex; gap:12px; cursor:pointer; border-bottom:1px solid #fafafa; }
-    .conv:hover { background:#fafafa; }
-    .conv.is-active { background:#efefef; }
-    .avatar { width:44px;height:44px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:.75rem;font-weight:600; }
-    .conv-body { min-width:0; flex:1; }
-    .conv-top { display:flex; justify-content:space-between; gap:8px; margin-bottom:2px; }
-    .conv-name { font-weight:600; font-size:.88rem; }
-    .conv-time { font-size:.7rem; color:var(--ig-sub); }
-    .conv-preview { font-size:.78rem; color:var(--ig-sub); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .thread-card { display:flex; flex-direction:column; min-height:560px; }
-    .thread-top { padding:10px 16px; border-bottom:1px solid var(--ig-line); display:flex; align-items:center; gap:10px; }
-    .thread { flex:1; padding:16px 20px; background:var(--ig-bg); overflow-y:auto; display:flex; flex-direction:column; gap:4px; }
-    .msg { max-width:72%; padding:10px 14px; border-radius:18px; line-height:1.45; font-size:.9rem; word-wrap:break-word; }
-    .msg.adult { align-self:flex-start; background:var(--ig-incoming); border-radius:18px 18px 18px 4px; }
-    .msg.child { align-self:flex-end; color:#fff; background:linear-gradient(130deg,var(--ig-outgoing1),var(--ig-outgoing2)); border-radius:18px 18px 4px 18px; }
-    .composer { padding:12px 16px; border-top:1px solid var(--ig-line); background:#fff; }
-    .composer textarea { width:100%; min-height:64px; resize:vertical; border-radius:20px; border:1px solid var(--ig-line); background:#fafafa; padding:10px 14px; font:inherit; font-size:.88rem; }
-    .controls { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; align-items:center; }
-    select, button { border:none; border-radius:8px; padding:8px 12px; font:inherit; font-size:.82rem; font-weight:600; cursor:pointer; }
-    select { background:#fff; border:1px solid var(--ig-line); }
-    button { background:#0095f6; color:#fff; }
-    button.secondary { background:#efefef; color:#262626; }
-    .analysis { padding:16px; display:flex; flex-direction:column; gap:10px; }
-    .analysis h2 { margin:0; font-family:Fraunces,serif; font-size:1.4rem; background:linear-gradient(135deg,#111827,#4b5563); -webkit-background-clip:text; background-clip:text; color:transparent; }
-    .pill { display:inline-flex; align-items:center; padding:5px 10px; border-radius:999px; font-size:11px; font-weight:700; margin:4px 6px 0 0; }
-    .pillRisk { background:#fee2e2; color:#b91c1c; border:1px solid #fecaca; }
-    .pillSafe { background:#dcfce7; color:#15803d; border:1px solid #bbf7d0; }
-    .muted { color:var(--ig-sub); font-size:.85rem; line-height:1.5; }
-    .flagged { display:flex; flex-direction:column; gap:8px; max-height:260px; overflow:auto; }
-    .flag { padding:10px 12px; border-radius:12px; background:rgba(255,255,255,.55); border:1px solid rgba(255,255,255,.5); }
-    .chip { display:inline-flex; margin:3px 5px 0 0; padding:4px 8px; border-radius:999px; background:#fee2e2; color:#b91c1c; font-size:11px; font-weight:600; border:1px solid #fecaca; }
-    .banner { padding:10px 12px; border-radius:12px; background:linear-gradient(135deg,#eff6ff,#eef2ff); border:1px solid #dbeafe; }
-    .error { background:#fef2f2; border-color:#fecaca; color:#991b1b; }
-    .footer { grid-column:1 / -1; font-size:.8rem; color:var(--ig-sub); line-height:1.5; }
-    .status { font-size:.8rem; color:var(--ig-sub); }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body { margin: 0; background: var(--frame); color: var(--text); font-family: var(--sans); font-size: 14px; line-height: 1.5; }
+    button, textarea, select { font: inherit; }
+    .app { height: 100vh; height: 100dvh; display: grid; grid-template-rows: 48px auto 1fr; }
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between; gap: 16px;
+      padding: 0 20px; background: var(--frame);
+    }
+    .brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    .brand-mark {
+      width: 32px; height: 32px; border-radius: 9px; background: var(--accent); color: #fff;
+      display: grid; place-items: center; font-family: var(--display); font-weight: 700; font-size: 18px;
+      flex: 0 0 auto;
+    }
+    .brand h1 { margin: 0; font-family: var(--display); font-size: 24px; line-height: 1; letter-spacing: -.02em; font-weight: 700; }
+    .brand p { margin: 4px 0 0; color: var(--muted); font-size: 13px; line-height: 1.4; }
+    .synthetic-note { color: var(--muted); font-size: 12px; text-align: right; }
+    .viewtabs { display: none; gap: 6px; padding: 0 12px 8px; background: var(--frame); }
+    .viewtabs button {
+      position: relative; flex: 1; border: 0; background: transparent; border-radius: 8px; padding: 11px 6px;
+      font-size: 13px; font-weight: 700; color: var(--muted); cursor: pointer; min-height: 44px;
+    }
+    .tab-dot {
+      position: absolute; top: 8px; right: 14px; width: 8px; height: 8px;
+      border-radius: 50%; background: var(--danger);
+    }
+    .tab-dot[hidden] { display: none; }
+    .viewtabs button.is-active { background: var(--accent-soft); color: var(--accent); }
+    .viewtabs button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .sheet {
+      background: var(--sheet); border: 1px solid var(--edge); border-radius: 16px;
+      margin: 0 8px 8px 8px; min-height: 0;
+      display: grid; grid-template-columns: 280px minmax(0, 1fr) 360px;
+    }
+    .panel { min-width: 0; min-height: 0; display: flex; flex-direction: column; }
+    .inbox-panel { border-right: 1px solid var(--edge); }
+    .insights-panel { border-left: 1px solid var(--edge); background: #fbfdfc; border-radius: 0 16px 16px 0; }
+    .panel-header { padding: 14px 16px 10px; }
+    .panel-title { margin: 0; font-size: 14px; font-weight: 700; }
+    .panel-subtitle { color: var(--muted); font-size: 12px; margin-top: 2px; }
+    .conversation-list { overflow-y: auto; padding: 4px 8px 12px; }
+    .conversation {
+      width: 100%; border: 0; background: transparent; border-radius: 10px; padding: 10px 12px 10px 10px;
+      display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; gap: 10px; align-items: start;
+      text-align: left; cursor: pointer; color: inherit; position: relative;
+    }
+    .conversation:hover { background: #f2f6f5; }
+    .conversation:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+    .conversation.is-active { background: var(--accent-soft); }
+    .conversation.is-active::before {
+      content: ""; position: absolute; left: 0; top: 10px; bottom: 10px; width: 2px;
+      background: var(--accent); border-radius: 2px;
+    }
+    .avatar {
+      width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center;
+      color: #fff; font-size: 12px; font-weight: 700;
+    }
+    .conversation-name { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .conversation-preview { color: var(--muted); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
+    .conversation-time { color: var(--muted); font-size: 12px; white-space: nowrap; }
+    .chat-panel { min-width: 0; }
+    .chat-header { padding: 14px 18px 10px; display: flex; align-items: center; gap: 12px; }
+    .chat-name { font-size: 15px; font-weight: 700; }
+    .chat-subtitle { color: var(--muted); font-size: 12px; }
+    .chat-scroll { flex: 1; overflow-y: auto; padding: 6px 18px 18px; background: #f7faf9; }
+    .day-divider { display: flex; align-items: center; gap: 12px; color: var(--muted); font-size: 11px; margin: 8px 0 16px; }
+    .day-divider::before, .day-divider::after { content: ""; height: 1px; background: var(--edge); flex: 1; }
+    .message-row { display: flex; gap: 10px; margin: 10px 0; align-items: flex-end; }
+    .message-row.outgoing { flex-direction: row-reverse; }
+    .message-avatar { width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; font-size: 10px; font-weight: 700; color: #fff; flex: 0 0 auto; }
+    .message-stack { max-width: min(70%, 560px); display: flex; flex-direction: column; gap: 4px; }
+    .outgoing .message-stack { align-items: flex-end; }
+    .bubble {
+      padding: 10px 13px; border-radius: 14px; background: var(--sheet); border: 1px solid var(--edge);
+      font-size: 14px; line-height: 1.45; word-break: break-word;
+    }
+    .outgoing .bubble { background: var(--accent); border-color: var(--accent); color: #fff; border-bottom-right-radius: 5px; }
+    .incoming .bubble { border-bottom-left-radius: 5px; }
+    .bubble.has-evidence { border-left: 3px solid var(--evidence); }
+    .outgoing .bubble.has-evidence { border-left-color: var(--accent); border-right: 3px solid var(--evidence); }
+    .bubble.flash { outline: 2px solid var(--evidence); outline-offset: 2px; }
+    .bubble:focus { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .message-meta { color: var(--muted); font-size: 12px; padding: 0 4px; }
+    .composer { padding: 12px 18px 14px; background: var(--sheet); border-top: 1px solid var(--edge); border-radius: 0 0 0 0; }
+    .composer-row { display: flex; gap: 10px; align-items: stretch; }
+    .composer textarea {
+      flex: 1; min-height: 48px; max-height: 120px; resize: vertical; border: 1px solid var(--edge);
+      border-radius: 10px; padding: 12px; background: #f7faf9; color: var(--text); font-size: 14px;
+    }
+    .composer-row .button { align-self: flex-end; min-height: 48px; padding: 10px 18px; }
+    .composer-actions .button, .composer-actions .select { min-height: 44px; }
+    .composer textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+    .button {
+      border: 0; border-radius: 9px; padding: 10px 14px; background: var(--accent); color: #fff;
+      font-weight: 700; font-size: 13px; cursor: pointer; white-space: nowrap;
+    }
+    .button.secondary { background: #eef3f2; color: var(--text); }
+    .button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .composer-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 8px; }
+    .select { border: 1px solid var(--edge); border-radius: 9px; padding: 9px 10px; background: var(--sheet); color: var(--text); font-size: 13px; }
+    .scan-status { margin-top: 8px; min-height: 18px; color: var(--muted); font-size: 12px; }
+    .insights-scroll { flex: 1; overflow-y: auto; padding: 0 16px 16px; display: flex; flex-direction: column; gap: 14px; }
+    .insight-state { padding: 12px 14px; border-radius: 10px; background: #eef3f2; font-size: 13px; }
+    .insight-state.safe { background: var(--safe-soft); color: var(--safe); }
+    .insight-state.warning { background: var(--danger-soft); color: var(--danger); }
+    .insight-state.error { background: var(--danger-soft); color: var(--danger); }
+    #resultPill {
+      display: inline-block; padding: 4px 10px; border-radius: 999px;
+      font-size: 12px; font-weight: 700; background: #eef3f2; color: var(--muted);
+    }
+    #resultPill.pill-risk { background: var(--danger-soft); color: var(--danger); }
+    #resultPill.pill-safe { background: var(--safe-soft); color: var(--safe); }
+    .risk-block { display: flex; flex-direction: column; gap: 4px; }
+    .risk-level { font-family: var(--display); font-size: 30px; line-height: 1.05; letter-spacing: -.02em; font-weight: 700; }
+    .risk-caption { color: var(--muted); font-size: 12px; }
+    .insight-label { font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 6px; }
+    .signal-list { display: flex; flex-wrap: wrap; gap: 6px; }
+    .signal { padding: 6px 9px; border-radius: 999px; background: var(--warn-soft); color: var(--warn); font-size: 12px; font-weight: 700; }
+    .guidance { color: var(--text); font-size: 13px; line-height: 1.55; }
+    .evidence-list { display: flex; flex-direction: column; gap: 8px; }
+    .evidence-card {
+      width: 100%; text-align: left; border-radius: 10px; padding: 11px 12px;
+      background: #f2f6f5; border: 0; cursor: pointer; color: var(--text); font-size: 13px;
+    }
+    .evidence-card:hover { background: var(--accent-soft); }
+    .evidence-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .evidence-card strong { display: block; font-size: 13px; margin-bottom: 4px; }
+    .evidence-card p { margin: 4px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+    .limitations { color: var(--muted); font-size: 12px; line-height: 1.5; }
+    @media (prefers-reduced-motion: reduce) {
+      * { animation: none !important; transition: none !important; }
+      html { scroll-behavior: auto; }
+    }
+    @media (max-width: 1100px) {
+      .sheet { grid-template-columns: 240px minmax(0, 1fr) 320px; }
+    }
+    @media (max-width: 1023px) {
+      .app { grid-template-rows: auto auto 1fr; }
+      .topbar { padding: 10px 16px; align-items: flex-start; }
+      .brand h1 { font-size: 22px; }
+      .viewtabs { display: flex; }
+      .sheet { grid-template-columns: minmax(0, 1fr); overflow: hidden; }
+      .panel { display: none; overflow: hidden; }
+      .panel.is-visible { display: flex; }
+      .inbox-panel, .insights-panel { border: 0; border-radius: 16px; }
+      .conversation-list, .chat-scroll, .insights-scroll { flex: 1; }
+      .synthetic-note { display: none; }
+      .message-stack { max-width: 82%; }
+    }
   </style>
 </head>
 <body>
-  <div class="page">
-    <div class="shell">
-      <aside class="card inbox">
-        <div class="inbox-top">
-          <div class="wordmark"><div class="logo">IB</div>Instabam</div>
-          <span class="muted">Synthetic demo</span>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">K</div>
+        <div>
+          <h1>Kandor</h1>
+          <p>Synthetic conversation demo — see how Kandor reviews risky chats</p>
         </div>
-        <div id="inboxList"></div>
+      </div>
+      <div class="synthetic-note">All conversations are synthetic.<br />No real messages are used.</div>
+    </header>
+
+    <nav class="viewtabs" aria-label="Views">
+      <button type="button" data-view="inbox-panel">Conversations</button>
+      <button type="button" data-view="chat-panel" class="is-active">Messages</button>
+      <button type="button" data-view="insights-panel">Insights<span class="tab-dot" id="insightsDot" hidden aria-hidden="true"></span></button>
+    </nav>
+
+    <main class="sheet">
+      <aside class="panel inbox-panel is-visible" aria-labelledby="conversations-title">
+        <div class="panel-header">
+          <h2 class="panel-title" id="conversations-title">Conversations</h2>
+          <div class="panel-subtitle">Demo inbox</div>
+        </div>
+        <div class="conversation-list" id="inboxList" role="list"></div>
       </aside>
 
-      <section class="card thread-card">
-        <div class="thread-top">
-          <div class="avatar" id="activeAvatar">s9</div>
+      <section class="panel chat-panel is-visible" aria-labelledby="chat-title">
+        <div class="chat-header">
+          <div class="avatar" id="activeAvatar" aria-hidden="true">s9</div>
           <div>
-            <div style="font-weight:600" id="activeName">stranger_92</div>
-            <div class="muted" id="activeSub">Synthetic conversation</div>
+            <div class="chat-name" id="chat-title"><span id="activeName">stranger_92</span></div>
+            <div class="chat-subtitle" id="activeSub">Grooming-pattern example</div>
           </div>
         </div>
-        <div class="thread" id="thread"></div>
+        <div class="chat-scroll" id="thread" role="log" aria-live="polite" aria-label="Conversation messages"></div>
         <div class="composer">
-          <textarea id="messageInput" placeholder="Message..." aria-label="Message"></textarea>
-          <div class="controls">
-            <select id="speakerSelect" aria-label="Send as">
-              <option value="adult">Other person (left)</option>
-              <option value="child">You (right)</option>
-            </select>
-            <button type="button" id="addMessage">Send</button>
-            <button type="button" id="resetChat" class="secondary">Reset thread</button>
-            <button type="button" id="analyzeNow" class="secondary">Analyze now</button>
+          <div class="composer-row">
+            <textarea id="messageInput" placeholder="Add a synthetic message..." aria-label="Message"></textarea>
+            <button class="button" type="button" id="addMessage">Send</button>
           </div>
-          <div class="status" id="scanStatus">Ready.</div>
+          <div class="composer-actions">
+            <select id="speakerSelect" class="select" aria-label="Send as">
+              <option value="adult">Other person</option>
+              <option value="child">You</option>
+            </select>
+            <button class="button secondary" type="button" id="resetChat">Reset</button>
+            <button class="button secondary" type="button" id="analyzeNow">Analyze now</button>
+          </div>
+          <div class="scan-status" id="scanStatus" role="status">Ready.</div>
         </div>
       </section>
 
-      <aside class="card analysis">
-        <h2>Kandor analysis</h2>
-        <div id="analysisStatus" class="banner">Select or edit a conversation to begin.</div>
-        <div id="resultPill" class="pill pillSafe">Idle</div>
-        <div><b>Danger rating:</b> <span id="danger">-</span></div>
-        <div><b>Confidence:</b> <span id="confidence">-</span> <span class="muted">(heuristic, not calibrated)</span></div>
-        <div><b>Analysis mode:</b> <span id="mode">-</span></div>
-        <div><b>Recommended action:</b> <span id="action">-</span></div>
-        <div><b>Detected signals:</b> <span id="threats">None</span></div>
-        <div class="muted" id="evaluation"></div>
-        <div><b>Message evidence</b></div>
-        <div class="flagged" id="flagged"></div>
+      <aside class="panel insights-panel" aria-labelledby="insights-title">
+        <div class="panel-header">
+          <h2 class="panel-title" id="insights-title">Kandor insights</h2>
+          <span id="resultPill">Idle</span>
+        </div>
+        <div class="insights-scroll">
+          <div class="insight-state" id="analysisStatus" role="status">Select a conversation to review its patterns.</div>
+          <div class="risk-block">
+            <div class="risk-level" id="riskLevel">Not reviewed</div>
+            <div class="risk-caption" id="riskCaption">Kandor will summarize concerns when analysis completes.</div>
+          </div>
+          <div>
+            <div class="insight-label">What Kandor noticed</div>
+            <div class="guidance" id="finding">Select a conversation to review its patterns.</div>
+          </div>
+          <div>
+            <div class="insight-label">Detected signals</div>
+            <div class="signal-list" id="threats"></div>
+          </div>
+          <div>
+            <div class="insight-label">Message evidence</div>
+            <div class="guidance" style="margin-bottom:6px;">Select an item to see it in the conversation.</div>
+            <div class="evidence-list" id="flagged"></div>
+          </div>
+          <div>
+            <div class="insight-label">Recommended next step</div>
+            <div class="guidance" id="action">No action needed yet.</div>
+          </div>
+          <div>
+            <div class="insight-label">Analysis basis</div>
+            <div class="guidance" id="mode">Rule-based analysis. No paid model is used.</div>
+          </div>
+          <div class="risk-caption" id="scoreNote"></div>
+          <div class="risk-caption" id="danger" hidden></div>
+          <div class="limitations">
+            Rule-based analysis is heuristic, not clinically validated. It can miss harmful behavior or flag ordinary phrases. Scores are not calibrated probabilities.
+          </div>
+        </div>
       </aside>
-
-      <div class="footer">
-        Synthetic conversations only. Kandor is not clinically validated and may produce false positives or false negatives. Rule-based fallback results are labeled separately from model output. No Chrome extension is required for this demo.
-      </div>
-    </div>
+    </main>
   </div>
 
   <script>
     const threads = {
       stranger: {
-        name:"stranger_92", initials:"s9", grad:"linear-gradient(135deg,#6366f1,#8b5cf6)", sub:"Synthetic grooming-pattern example",
-        messages:[
-          {speaker:"adult", text:"You seem really mature for your age. Do not tell your parents we talk, okay?"},
-          {speaker:"child", text:"Why not? They usually check my messages."},
-          {speaker:"adult", text:"They would not understand our connection. Move to WhatsApp and send me your address so I can mail you a surprise."},
-          {speaker:"child", text:"I do have WhatsApp. What kind of surprise?"}
+        name: "stranger_92", initials: "s9", color: "#0f766e", subtitle: "Grooming-pattern example",
+        messages: [
+          { speaker: "adult", text: "You seem really mature for your age. Do not tell your parents we talk, okay?", time: "9:12 AM" },
+          { speaker: "child", text: "Why not? They usually check my messages.", time: "9:13 AM" },
+          { speaker: "adult", text: "They would not understand our connection. Move to WhatsApp and send me your address so I can mail you a surprise.", time: "9:14 AM" },
+          { speaker: "child", text: "I do have WhatsApp. What kind of surprise?", time: "9:15 AM" }
         ]
       },
       alex: {
-        name:"alex", initials:"AX", grad:"linear-gradient(135deg,#ef4444,#dc2626)", sub:"Synthetic harassment example",
-        messages:[
-          {speaker:"adult", text:"You are worthless and nobody wants you."},
-          {speaker:"child", text:"Please stop."},
-          {speaker:"adult", text:"Everyone hates you."}
+        name: "alex", initials: "AX", color: "#b43d34", subtitle: "Harassment example",
+        messages: [
+          { speaker: "adult", text: "You are worthless and nobody wants you.", time: "8:42 AM" },
+          { speaker: "child", text: "Please stop.", time: "8:43 AM" },
+          { speaker: "adult", text: "Everyone hates you.", time: "8:43 AM" }
         ]
       },
       sam: {
-        name:"sam", initials:"SP", grad:"linear-gradient(135deg,#f59e0b,#ea580c)", sub:"Synthetic personal-information request",
-        messages:[
-          {speaker:"adult", text:"Where do you live and what school do you go to?"},
-          {speaker:"child", text:"Why?"},
-          {speaker:"adult", text:"Send me your address so I can visit."}
+        name: "sam", initials: "SP", color: "#b46a2b", subtitle: "Personal-information request",
+        messages: [
+          { speaker: "adult", text: "Where do you live and what school do you go to?", time: "Yesterday" },
+          { speaker: "child", text: "Why?", time: "Yesterday" },
+          { speaker: "adult", text: "Send me your address so I can visit.", time: "Yesterday" }
         ]
       },
       mia: {
-        name:"mia.creates", initials:"MC", grad:"linear-gradient(135deg,#ec4899,#f43f5e)", sub:"Synthetic low-risk conversation",
-        messages:[
-          {speaker:"adult", text:"Still on for the museum tomorrow?"},
-          {speaker:"child", text:"Yep! 2pm at the main entrance"},
-          {speaker:"adult", text:"haha see you tmrw then"}
+        name: "mia.creates", initials: "MC", color: "#a04f78", subtitle: "Low-risk conversation",
+        messages: [
+          { speaker: "adult", text: "Still on for the museum tomorrow?", time: "7:30 PM" },
+          { speaker: "child", text: "Yep! 2pm at the main entrance", time: "7:31 PM" },
+          { speaker: "adult", text: "haha see you tmrw then", time: "7:32 PM" }
         ]
       },
       jordan: {
-        name:"jordan.lee", initials:"JL", grad:"linear-gradient(135deg,#14b8a6,#0d9488)", sub:"Synthetic ambiguous conversation",
-        messages:[
-          {speaker:"adult", text:"What are you wearing to the party?"},
-          {speaker:"child", text:"Just jeans and a hoodie."},
-          {speaker:"adult", text:"Cool, see you there."}
+        name: "jordan.lee", initials: "JL", color: "#3f6f8f", subtitle: "Ambiguous conversation",
+        messages: [
+          { speaker: "adult", text: "What are you wearing to the party?", time: "Mon" },
+          { speaker: "child", text: "Just jeans and a hoodie.", time: "Mon" },
+          { speaker: "adult", text: "Cool, see you there.", time: "Mon" }
         ]
       },
       snack: {
-        name:"the_snack_squad", initials:"S", grad:"linear-gradient(135deg,#f59e0b,#ea580c)", sub:"Synthetic group chat",
-        messages:[
-          {speaker:"adult", text:"whos bringing chips"},
-          {speaker:"child", text:"I can grab 2 bags"}
+        name: "the_snack_squad", initials: "S", color: "#8a7040", subtitle: "Group chat",
+        messages: [
+          { speaker: "adult", text: "whos bringing chips", time: "Sun" },
+          { speaker: "child", text: "I can grab 2 bags", time: "Sun" }
         ]
       }
     };
@@ -178,250 +337,328 @@ DEMO_HTML = r"""<!doctype html>
     const resetButton = document.getElementById("resetChat");
     const analyzeButton = document.getElementById("analyzeNow");
     const scanStatus = document.getElementById("scanStatus");
+    const viewtabs = document.querySelector(".viewtabs");
 
     let currentId = "stranger";
+    let currentMessages = [];
     let lastSignature = "";
     let scanTimer = null;
     let scanning = false;
+    let latestFlaggedTexts = new Set();
 
-    function speakerClass(speaker){ return speaker === "child" ? "child" : "adult"; }
-    function normalizeText(v){ return String(v||"").replace(/\s+/g," ").trim(); }
-
-    function getBaselineMessages(){ return (threads[currentId]?.messages || []).map(m => ({...m})); }
-
-    function renderMessages(messages){
-      thread.innerHTML = "";
-      for (const m of messages){
-        const bubble = document.createElement("div");
-        bubble.className = "msg " + speakerClass(m.speaker);
-        bubble.textContent = m.text;
-        thread.appendChild(bubble);
+    function normalizeText(value) { return String(value || "").replace(/\s+/g, " ").trim(); }
+    function speakerClass(speaker) { return speaker === "child" ? "outgoing" : "incoming"; }
+    function nowLabel() { return "Just now"; }
+    function riskLevel(danger) {
+      if (danger >= 80) return "Severe concern";
+      if (danger >= 60) return "High concern";
+      if (danger >= 40) return "Moderate concern";
+      if (danger > 0) return "Low concern";
+      return "No strong concern";
+    }
+    function riskCaption(danger) {
+      if (danger >= 80) return "Several strong patterns suggest the conversation needs immediate attention.";
+      if (danger >= 60) return "Multiple concerning patterns are present in this conversation.";
+      if (danger >= 40) return "Some concerning patterns are present and deserve attention.";
+      if (danger > 0) return "A minor pattern was noticed, but the overall conversation is low concern.";
+      return "No strong concerning pattern was detected in this synthetic conversation.";
+    }
+    function actionLabel(action) {
+      const labels = { none: "No action needed.", monitor: "Continue monitoring the conversation.", warn_user: "Warn the person at risk.", block_and_alert_guardian: "Block the contact and alert a guardian." };
+      return labels[action] || "Continue monitoring the conversation.";
+    }
+    function findingText(threats, danger) {
+      if (!threats.length) {
+        return danger > 0
+          ? "One minor pattern stood out, but the overall conversation looks low concern."
+          : "Nothing in this conversation stood out as concerning.";
       }
+      const names = threats.map(signalLabel);
+      const list = names.length > 1
+        ? names.slice(0, -1).join(", ") + " and " + names[names.length - 1]
+        : names[0];
+      return "This conversation shows signs of " + list.toLowerCase() + ". Review the flagged messages for context.";
+    }
+    function updateInsightsDot(danger) {
+      const dot = document.getElementById("insightsDot");
+      if (!dot) return;
+      dot.hidden = !(Number(danger) >= 40);
+    }
+    function reducedMotion() {
+      return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    }
+    function signalLabel(signal) {
+      const labels = { GROOMING: "Trust grooming", SEXUAL_CONTENT: "Sexual content", PII_SOLICITATION: "Personal information request", PLATFORM_MIGRATION: "Move off-platform", THREATS_COERCION: "Threats or coercion", SELF_HARM_CONTENT: "Self-harm content", HATE_HARASSMENT: "Harassment", FINANCIAL_SCAM: "Financial scam", OBFUSCATION: "Hidden language" };
+      return labels[signal] || signal;
+    }
+
+    function renderMessages() {
+      thread.replaceChildren();
+      const divider = document.createElement("div");
+      divider.className = "day-divider";
+      divider.textContent = "Today";
+      thread.appendChild(divider);
+      currentMessages.forEach((message, index) => {
+        const row = document.createElement("div");
+        row.className = "message-row " + speakerClass(message.speaker);
+        const avatar = document.createElement("div");
+        avatar.className = "message-avatar";
+        avatar.style.background = message.speaker === "child" ? "#38525a" : (threads[currentId]?.color || "#0f766e");
+        avatar.textContent = message.speaker === "child" ? "You" : (threads[currentId]?.initials || "?");
+        const stack = document.createElement("div");
+        stack.className = "message-stack";
+        const bubble = document.createElement("div");
+        bubble.className = "bubble" + (latestFlaggedTexts.has(normalizeText(message.text)) ? " has-evidence" : "");
+        bubble.textContent = message.text;
+        bubble.id = "msg-" + index;
+        const meta = document.createElement("div");
+        meta.className = "message-meta";
+        meta.textContent = (message.speaker === "child" ? "You" : threads[currentId]?.name || "Other") + " · " + (message.time || nowLabel());
+        stack.appendChild(bubble);
+        stack.appendChild(meta);
+        row.appendChild(avatar);
+        row.appendChild(stack);
+        thread.appendChild(row);
+      });
       thread.scrollTop = thread.scrollHeight;
     }
 
-    function extractMessages(){
-      const out = [];
-      for (const bubble of thread.querySelectorAll(".msg")){
-        const speaker = bubble.classList.contains("child") ? "child" : "adult";
-        const text = normalizeText(bubble.textContent);
-        if (text) out.push({speaker, text});
-      }
-      return out.slice(-24);
+    function signature() {
+      return JSON.stringify({ id: currentId, messages: currentMessages.map(message => ({ speaker: message.speaker, text: message.text })) });
     }
 
-    function signature(messages){
-      return JSON.stringify({id:currentId, messages:messages.map(m=>({speaker:m.speaker,text:m.text}))});
+    function scanPayload() {
+      return currentMessages.slice(-24).map(message => ({ speaker: message.speaker, text: message.text }));
     }
 
-    function threatLabel(t){
-      const labels = {GROOMING:"Trust grooming", SEXUAL_CONTENT:"Sexual content", PII_SOLICITATION:"Personal info request", PLATFORM_MIGRATION:"Move off-platform", THREATS_COERCION:"Threats or coercion", SELF_HARM_CONTENT:"Self-harm content", HATE_HARASSMENT:"Harassment", FINANCIAL_SCAM:"Financial scam", OBFUSCATION:"Hidden language"};
-      return labels[t] || t;
-    }
-    function actionLabel(action){
-      const labels = {none:"No action needed", monitor:"Monitor", warn_user:"Warn the user", block_and_alert_guardian:"Block and alert a guardian"};
-      return labels[action] || action || "Monitor";
-    }
-    function riskLevel(danger){
-      if (danger >= 80) return "Severe";
-      if (danger >= 60) return "High";
-      if (danger >= 40) return "Moderate";
-      if (danger > 0) return "Low";
-      return "None detected";
-    }
-
-    function renderResult(result){
+    function renderResult(result) {
       const danger = Number(result?.danger_rating || 0);
-      const confidence = Number(result?.confidence_score ?? result?.confidence ?? 0);
-      document.getElementById("resultPill").textContent = danger > 0 ? riskLevel(danger) + " risk (" + danger + ")" : "Clear";
-      document.getElementById("resultPill").className = "pill " + (danger >= 40 ? "pillRisk" : "pillSafe");
+      latestFlaggedTexts = new Set((Array.isArray(result?.flagged_messages) ? result.flagged_messages : []).map(item => normalizeText(item?.text)));
+      const pill = document.getElementById("resultPill");
+      pill.textContent = danger >= 40 ? "Needs review" : "Reviewed";
+      pill.className = danger >= 40 ? "pill-risk" : "pill-safe";
+      pill.id = "resultPill";
+      document.getElementById("riskLevel").textContent = riskLevel(danger);
+      document.getElementById("riskCaption").textContent = riskCaption(danger);
       document.getElementById("danger").textContent = danger;
-      document.getElementById("confidence").textContent = confidence;
-      document.getElementById("mode").textContent = result?.fallback_used ? "Fallback (rules only)" : (result?.analysis_provider || "unknown");
+      document.getElementById("scoreNote").textContent = "Heuristic score " + danger + " of 100. This is not a calibrated probability.";
+      document.getElementById("mode").textContent = result?.fallback_used ? "Rule-based analysis. No paid model is used." : "Model-assisted analysis.";
       document.getElementById("action").textContent = actionLabel(result?.recommended_action || "none");
       const threats = Array.isArray(result?.threats_detected) ? result.threats_detected : [];
       const threatsEl = document.getElementById("threats");
-      threatsEl.textContent = "";
+      threatsEl.replaceChildren();
       if (!threats.length) {
-        threatsEl.textContent = "None";
+        const empty = document.createElement("div");
+        empty.className = "risk-caption";
+        empty.textContent = "No concerning signals detected.";
+        threatsEl.appendChild(empty);
       } else {
-        for (const t of threats) {
+        for (const signal of threats) {
           const chip = document.createElement("span");
-          chip.className = "chip";
-          chip.textContent = threatLabel(t);
+          chip.className = "signal";
+          chip.textContent = signalLabel(signal);
           threatsEl.appendChild(chip);
         }
       }
-      document.getElementById("evaluation").textContent = result?.evaluation || "";
+      document.getElementById("finding").textContent = findingText(threats, danger);
+      updateInsightsDot(danger);
       const flagged = Array.isArray(result?.flagged_messages) ? result.flagged_messages : [];
       const flaggedEl = document.getElementById("flagged");
-      flaggedEl.textContent = "";
-      if (flagged.length){
-        for (const item of flagged){
-          const div = document.createElement("div");
-          div.className = "flag";
-          const line = document.createElement("div");
-          const speaker = document.createElement("b");
-          speaker.textContent = (item.speaker || "unknown") + ":";
-          line.appendChild(speaker);
-          line.appendChild(document.createTextNode(" " + (item.text || "")));
-          div.appendChild(line);
-          const reasons = document.createElement("div");
-          reasons.className = "muted";
-          reasons.style.marginTop = "4px";
-          reasons.textContent = "Reasons: " + (((item.reasons||[]).map(threatLabel).join(", ")) || "None");
-          div.appendChild(reasons);
-          const matched = document.createElement("div");
-          matched.className = "muted";
-          matched.style.marginTop = "4px";
-          matched.textContent = "Matched: " + (((item.phrases||[]).join(" | ")) || "None");
-          div.appendChild(matched);
-          flaggedEl.appendChild(div);
-        }
-      } else if (result?.highest_risk_message){
-        const div = document.createElement("div");
-        div.className = "flag";
-        const title = document.createElement("div");
-        const b = document.createElement("b");
-        b.textContent = "Highest-risk excerpt";
-        title.appendChild(b);
-        div.appendChild(title);
-        const body = document.createElement("div");
-        body.style.marginTop = "6px";
+      flaggedEl.replaceChildren();
+      if (flagged.length) {
+        flagged.forEach((item) => {
+          const card = document.createElement("button");
+          card.type = "button";
+          card.className = "evidence-card";
+          const title = document.createElement("strong");
+          const who = item.speaker === "child" ? "You" : (item.speaker === "adult" || item.speaker === "sender" ? "Other person" : (item.speaker || "Unknown"));
+          title.textContent = who + ": " + (item.text || "");
+          card.appendChild(title);
+          const why = document.createElement("p");
+          why.textContent = "Why it matters: " + (((item.reasons || []).map(signalLabel).join(", ")) || "No reason provided");
+          card.appendChild(why);
+          const matched = document.createElement("p");
+          matched.textContent = "Flagged wording: " + (((item.phrases || []).join(" | ")) || "None");
+          card.appendChild(matched);
+          card.addEventListener("click", () => {
+            const target = normalizeText(item.text);
+            const index = currentMessages.findIndex(message => normalizeText(message.text) === target);
+            if (index < 0) return;
+            const bubble = document.getElementById("msg-" + index);
+            if (!bubble) return;
+            if (window.matchMedia("(max-width: 1023px)").matches) setMobileView("chat-panel");
+            bubble.scrollIntoView({ block: "center", behavior: reducedMotion() ? "auto" : "smooth" });
+            bubble.setAttribute("tabindex", "-1");
+            bubble.focus({ preventScroll: true });
+            bubble.classList.add("flash");
+            setTimeout(() => {
+              bubble.classList.remove("flash");
+              bubble.removeAttribute("tabindex");
+            }, 1600);
+          });
+          flaggedEl.appendChild(card);
+        });
+      } else if (result?.highest_risk_message) {
+        const card = document.createElement("article");
+        card.className = "evidence-card";
+        const title = document.createElement("strong");
+        title.textContent = "Highest-risk excerpt";
+        card.appendChild(title);
+        const body = document.createElement("p");
         body.textContent = result.highest_risk_message;
-        div.appendChild(body);
-        flaggedEl.appendChild(div);
+        card.appendChild(body);
+        flaggedEl.appendChild(card);
       } else {
         const empty = document.createElement("div");
-        empty.className = "muted";
-        empty.textContent = "No message-level evidence returned.";
+        empty.className = "risk-caption";
+        empty.textContent = "No message-level evidence was returned.";
         flaggedEl.appendChild(empty);
       }
-      document.getElementById("analysisStatus").className = "banner";
-      document.getElementById("analysisStatus").textContent = danger >= 40 ? "Kandor detected a concerning pattern in this synthetic conversation." : "No strong concerning pattern detected in this synthetic conversation.";
-    }
-
-    function renderFailure(message){
-      document.getElementById("resultPill").textContent = "Failed";
-      document.getElementById("resultPill").className = "pill pillRisk";
-      document.getElementById("danger").textContent = "-";
-      document.getElementById("confidence").textContent = "-";
-      document.getElementById("mode").textContent = "Unavailable";
-      document.getElementById("action").textContent = "No conclusion";
-      document.getElementById("threats").textContent = "None";
-      document.getElementById("evaluation").textContent = "";
-      const failedMsg = document.createElement("div");
-      failedMsg.className = "muted";
-      failedMsg.textContent = "Analysis failed. Kandor did not mark this conversation as safe.";
-      const flaggedEl2 = document.getElementById("flagged");
-      flaggedEl2.textContent = "";
-      flaggedEl2.appendChild(failedMsg);
       const status = document.getElementById("analysisStatus");
-      status.className = "banner error";
-      status.textContent = message || "Analysis failed. No safety conclusion was produced.";
+      status.className = "insight-state " + (danger >= 40 ? "warning" : "safe");
+      status.textContent = danger >= 40
+        ? "Review complete — concerning pattern found."
+        : "Review complete — no strong concern.";
+      renderMessages();
     }
 
-    async function scan(force){
-      const messages = extractMessages();
-      if (!messages.length){ scanStatus.textContent = "No messages to analyze."; return; }
-      const sig = signature(messages);
-      if (!force && sig === lastSignature){ scanStatus.textContent = "No changes since last scan."; return; }
-      lastSignature = sig;
+    function renderFailure(message) {
+      latestFlaggedTexts = new Set();
+      const pill = document.getElementById("resultPill");
+      pill.textContent = "Analysis failed";
+      pill.className = "";
+      pill.id = "resultPill";
+      document.getElementById("riskLevel").textContent = "Analysis unavailable";
+      document.getElementById("riskCaption").textContent = "No safety conclusion was produced.";
+      document.getElementById("danger").textContent = "-";
+      document.getElementById("scoreNote").textContent = "";
+      document.getElementById("mode").textContent = "Unavailable";
+      document.getElementById("action").textContent = "Try the analysis again.";
+      const threatsEl = document.getElementById("threats");
+      threatsEl.replaceChildren();
+      const none = document.createElement("div");
+      none.className = "risk-caption";
+      none.textContent = "No signals reported.";
+      threatsEl.appendChild(none);
+      document.getElementById("finding").textContent = "No finding was produced because the analysis did not complete.";
+      updateInsightsDot(0);
+      const flaggedEl = document.getElementById("flagged");
+      flaggedEl.replaceChildren();
+      const failed = document.createElement("div");
+      failed.className = "risk-caption";
+      failed.textContent = "Analysis failed. Kandor did not mark this conversation as safe.";
+      flaggedEl.appendChild(failed);
+      const status = document.getElementById("analysisStatus");
+      status.className = "insight-state error";
+      status.textContent = message || "Analysis failed. No safety conclusion was produced.";
+      renderMessages();
+    }
+
+    async function scan(force) {
+      if (!currentMessages.length) { scanStatus.textContent = "No messages to analyze."; return; }
+      const currentSignature = signature();
+      if (!force && currentSignature === lastSignature) { scanStatus.textContent = "No changes since the last scan."; return; }
+      lastSignature = currentSignature;
       scanning = true;
       scanStatus.textContent = "Analyzing conversation...";
-      document.getElementById("analysisStatus").className = "banner";
-      document.getElementById("analysisStatus").textContent = "Analyzing synthetic conversation...";
+      const status = document.getElementById("analysisStatus");
+      status.className = "insight-state";
+      status.textContent = "Analyzing synthetic conversation...";
       try {
         const response = await fetch("/v1/evaluate", {
-          method:"POST",
-          headers:{"Content-Type":"application/json"},
-          body: JSON.stringify({platform:"demo", messages})
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ platform: "demo", messages: scanPayload() })
         });
         if (!response.ok) throw new Error("Backend returned HTTP " + response.status);
-        const result = await response.json();
-        renderResult(result);
+        renderResult(await response.json());
         scanStatus.textContent = "Analysis updated.";
-      } catch (err) {
-        renderFailure("Analysis failed: " + (err?.message || "network error") + ". Kandor did not mark this conversation as safe.");
+      } catch (error) {
+        renderFailure("Analysis failed: " + (error?.message || "network error") + ". Kandor did not mark this conversation as safe.");
         scanStatus.textContent = "Analysis failed.";
-      } finally {
-        scanning = false;
-      }
+      } finally { scanning = false; }
     }
 
-    function scheduleScan(){ if (scanTimer) clearTimeout(scanTimer); scanTimer = setTimeout(()=>scan(false), 700); }
+    function scheduleScan() { if (scanTimer) clearTimeout(scanTimer); scanTimer = setTimeout(() => scan(false), 650); }
 
-    function setActiveInbox(id){
+    function setActiveConversation(id) {
       currentId = id;
-      for (const btn of inboxList.querySelectorAll(".conv")) btn.classList.toggle("is-active", btn.getAttribute("data-id") === id);
-      const meta = threads[id];
-      activeName.textContent = meta.name;
-      activeSub.textContent = meta.sub;
-      activeAvatar.textContent = meta.initials;
-      activeAvatar.style.background = meta.grad;
+      for (const button of inboxList.querySelectorAll(".conversation")) button.classList.toggle("is-active", button.getAttribute("data-id") === id);
+      const conversation = threads[id];
+      activeName.textContent = conversation.name;
+      activeSub.textContent = conversation.subtitle;
+      activeAvatar.textContent = conversation.initials;
+      activeAvatar.style.background = conversation.color;
+      currentMessages = conversation.messages.map(message => ({ ...message }));
       lastSignature = "";
-      document.getElementById("analysisStatus").className = "banner";
-      document.getElementById("analysisStatus").textContent = "Analyzing synthetic conversation...";
-      renderMessages(getBaselineMessages());
+      latestFlaggedTexts = new Set();
+      updateInsightsDot(0);
+      renderMessages();
       messageInput.value = "";
+      document.getElementById("analysisStatus").className = "insight-state";
+      document.getElementById("analysisStatus").textContent = "Analyzing synthetic conversation...";
       scan(true);
     }
 
-    for (const id of Object.keys(threads)){
-      const meta = threads[id];
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "conv";
-      btn.setAttribute("data-id", id);
-      const avatar = document.createElement("div");
-      avatar.className = "avatar";
-      avatar.style.background = meta.grad;
-      avatar.textContent = meta.initials;
-      const body = document.createElement("div");
-      body.className = "conv-body";
-      const top = document.createElement("div");
-      top.className = "conv-top";
-      const name = document.createElement("span");
-      name.className = "conv-name";
-      name.textContent = meta.name;
-      const time = document.createElement("span");
-      time.className = "conv-time";
-      time.textContent = "demo";
-      top.appendChild(name);
-      top.appendChild(time);
-      const preview = document.createElement("div");
-      preview.className = "conv-preview";
-      preview.textContent = meta.messages[meta.messages.length-1]?.text || "";
-      body.appendChild(top);
-      body.appendChild(preview);
-      btn.appendChild(avatar);
-      btn.appendChild(body);
-      btn.addEventListener("click", ()=>setActiveInbox(id));
-      inboxList.appendChild(btn);
+    function setMobileView(viewClass) {
+      for (const panel of document.querySelectorAll(".sheet .panel")) panel.classList.toggle("is-visible", panel.classList.contains(viewClass));
+      for (const button of viewtabs.querySelectorAll("button")) button.classList.toggle("is-active", button.getAttribute("data-view") === viewClass);
     }
-
-    addButton.addEventListener("click", ()=>{
-      const text = messageInput.value.trim();
-      if (!text) return;
-      const bubble = document.createElement("div");
-      bubble.className = "msg " + speakerClass(speakerSelect.value);
-      bubble.textContent = text;
-      thread.appendChild(bubble);
-      messageInput.value = "";
-      thread.scrollTop = thread.scrollHeight;
-      scheduleScan();
+    viewtabs.addEventListener("click", event => {
+      const button = event.target.closest("button[data-view]");
+      if (button) setMobileView(button.getAttribute("data-view"));
     });
 
-    messageInput.addEventListener("keydown", (event)=>{ if ((event.ctrlKey || event.metaKey) && event.key === "Enter") addButton.click(); });
+    for (const id of Object.keys(threads)) {
+      const conversation = threads[id];
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "conversation";
+      button.setAttribute("data-id", id);
+      button.setAttribute("role", "listitem");
+      const avatar = document.createElement("div");
+      avatar.className = "avatar";
+      avatar.style.background = conversation.color;
+      avatar.textContent = conversation.initials;
+      const meta = document.createElement("div");
+      const name = document.createElement("div");
+      name.className = "conversation-name";
+      name.textContent = conversation.name;
+      const preview = document.createElement("div");
+      preview.className = "conversation-preview";
+      preview.textContent = conversation.messages[conversation.messages.length - 1]?.text || "";
+      meta.appendChild(name);
+      meta.appendChild(preview);
+      const time = document.createElement("div");
+      time.className = "conversation-time";
+      time.textContent = conversation.messages[conversation.messages.length - 1]?.time || "Demo";
+      button.appendChild(avatar);
+      button.appendChild(meta);
+      button.appendChild(time);
+      button.addEventListener("click", () => {
+        setActiveConversation(id);
+        if (window.matchMedia("(max-width: 1023px)").matches) setMobileView("chat-panel");
+      });
+      inboxList.appendChild(button);
+    }
 
-    resetButton.addEventListener("click", ()=>{ renderMessages(getBaselineMessages()); lastSignature=""; scan(true); });
+    addButton.addEventListener("click", () => {
+      const text = messageInput.value.trim();
+      if (!text) return;
+      currentMessages.push({ speaker: speakerSelect.value, text, time: nowLabel() });
+      renderMessages();
+      messageInput.value = "";
+      scheduleScan();
+    });
+    messageInput.addEventListener("keydown", event => { if ((event.ctrlKey || event.metaKey) && event.key === "Enter") addButton.click(); });
+    resetButton.addEventListener("click", () => { latestFlaggedTexts = new Set(); setActiveConversation(currentId); });
+    analyzeButton.addEventListener("click", () => scan(true));
 
-    analyzeButton.addEventListener("click", ()=>scan(true));
+    const observer = new MutationObserver(() => { if (!scanning) scheduleScan(); });
+    observer.observe(thread, { childList: true, subtree: true, characterData: true });
 
-    const observer = new MutationObserver(()=>{ if (!scanning) scheduleScan(); });
-    observer.observe(thread, {childList:true, subtree:true, characterData:true});
-
-    setActiveInbox("stranger");
+    setActiveConversation("stranger");
+    if (window.matchMedia("(max-width: 1023px)").matches) setMobileView("chat-panel");
   </script>
 </body>
 </html>
