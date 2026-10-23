@@ -2,6 +2,7 @@ services:
   - type: web
     name: kandor-backend
     runtime: python
+    plan: free
     rootDir: Backend
     buildCommand: pip install -r requirements.txt
     startCommand: python main.py

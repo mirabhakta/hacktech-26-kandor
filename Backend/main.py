@@ -84,6 +84,6 @@ if __name__ == "__main__":
     uvicorn.run(
         "main:app",
         host=os.getenv("KANDOR_HOST", "0.0.0.0"),
-        port=int(os.getenv("KANDOR_PORT", "8000")),
+        port=int(os.getenv("PORT", os.getenv("KANDOR_PORT", "8000"))),
         reload=os.getenv("KANDOR_RELOAD", "false").lower() == "true",
     )
