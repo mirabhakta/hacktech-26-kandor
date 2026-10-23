@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: kandor-backend
+    runtime: python
+    rootDir: Backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: python main.py
+    healthCheckPath: /health
+    envVars:
+      - key: KANDOR_PROVIDER
+        value: rules
+      - key: KANDOR_ALLOWED_ORIGINS
+        value: https://kandor-backend.onrender.com
+      - key: KANDOR_ALLOWED_ORIGIN_REGEX
+        value: chrome-extension://.*
+      - key: KANDOR_RATE_LIMIT_PER_MINUTE
+        value: "60"

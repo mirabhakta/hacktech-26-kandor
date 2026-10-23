@@ -45,7 +45,18 @@ Health check: `http://127.0.0.1:8000/health`
 
 See `Backend/.env.example`.
 
-## Known limitations
+## Recommended hosted deployment (Render free tier)
+
+1. Push the repository to GitHub (with approval).
+2. In Render, create a new Web Service from the repository.
+3. Render will use `render.yaml`: root directory `Backend`, build `pip install -r requirements.txt`, start `python main.py`.
+4. Set `KANDOR_ALLOWED_ORIGINS` to the public HTTPS URL and any local origins you need.
+5. Keep provider keys unset for the deterministic demo, or add them only in Render's secret environment variables.
+6. Verify `https://<service>.onrender.com/health`, `/demo`, and `/demo/console`.
+
+Expected cost: Render free web service tier may sleep after inactivity; paid tier is optional.
+
+## Known limitations:
 
 - The default provider is `rules`, so AI providers are not required for demos.
 - Browser/extension end-to-end testing was verified with Chromium and Playwright in this environment.

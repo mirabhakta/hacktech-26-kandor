@@ -15,7 +15,9 @@ node tests/e2e_extension.mjs
 - Backend tests: 12 passed.
 - Frontend JavaScript syntax: passed.
 - Playwright/Chromium extension E2E: passed (banner present, risk 100, fallback indicator shown).
-- Backend health check: passed.
+- Instagram synthetic extraction fixture: passed (3 messages, sidebar excluded).
+- Backend health check and demo routes: passed.
+- Docker build: not verified (Docker daemon unavailable).
 
 ## Unverified
 
