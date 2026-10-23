@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Kandor Demo</title>
+  <style>
+    :root { --ink:#111827; --muted:#4b5563; --line:rgba(255,255,255,.55); --accent:#4f46e5; }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,system-ui,sans-serif;background:linear-gradient(135deg,#eff6ff,#eef2ff 45%,#faf5ff);color:var(--ink)}
+    .wrap{max-width:980px;margin:0 auto;padding:20px}
+    h1{font-family:Georgia,serif;margin:0 0 8px}
+    .card{background:rgba(255,255,255,.65);border:1px solid var(--line);border-radius:20px;padding:18px;margin:12px 0;backdrop-filter:blur(12px)}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    @media (max-width:760px){.grid{grid-template-columns:1fr}}
+    button{padding:10px 14px;border:none;border-radius:12px;background:linear-gradient(90deg,#2563eb,#4f46e5);color:#fff;font-weight:600;cursor:pointer}
+    button.secondary{background:rgba(255,255,255,.7);color:var(--ink);border:1px solid var(--line)}
+    select,textarea{width:100%;padding:10px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.7);font:inherit}
+    textarea{min-height:140px}
+    .pill{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:600;margin:4px 6px 0 0}
+    .risk{background:#fee2e2;color:#b91c1c}
+    .safe{background:#dcfce7;color:#15803d}
+    .muted{color:var(--muted)}
+    .msg{padding:10px;border-radius:12px;background:rgba(255,255,255,.5);margin:6px 0}
+    pre{white-space:pre-wrap;word-break:break-word}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Kandor Safety Demo</h1>
+    <p class="muted">Synthetic conversations analyzed by the live Kandor backend. No browser extension required.</p>
+    <div class="grid">
+      <div class="card">
+        <h3>Scenario</h3>
+        <select id="scenario"></select>
+        <div style="margin-top:10px">
+          <button id="analyze">Analyze scenario</button>
+          <button id="custom" class="secondary">Use custom text</button>
+        </div>
+        <textarea id="customText" placeholder="sender: ...\nreceiver: ..." style="margin-top:10px"></textarea>
+      </div>
+      <div class="card">
+        <h3>Result</h3>
+        <div id="result" class="muted">No analysis yet.</div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Privacy and detection limitations</h3>
+      <p class="muted">This demo uses synthetic data only. It is not clinically validated, may produce false positives and false negatives, and is not production-safe for children without further review. Rule-based fallback results are labeled separately from model output.</p>
+    </div>
+  </div>
+  <script>
+    const scenarios = {
+      "Safe planning": [
+        {speaker:"sender",text:"Still on for the museum tomorrow?"},
+        {speaker:"receiver",text:"Yep! 2pm at the main entrance"},
+        {speaker:"sender",text:"haha see you tmrw then"}
+      ],
+      "Harassment": [
+        {speaker:"sender",text:"You are worthless and nobody wants you."},
+        {speaker:"receiver",text:"Please stop."},
+        {speaker:"sender",text:"Everyone hates you."}
+      ],
+      "Personal information request": [
+        {speaker:"sender",text:"Where do you live and what school do you go to?"},
+        {speaker:"receiver",text:"Why?"},
+        {speaker:"sender",text:"Send me your address so I can visit."}
+      ],
+      "Move off-platform": [
+        {speaker:"sender",text:"Let's move to WhatsApp and Snapchat."},
+        {speaker:"receiver",text:"Why not stay here?"},
+        {speaker:"sender",text:"Text me instead, it's more private."}
+      ],
+      "Potential grooming": [
+        {speaker:"sender",text:"You seem really mature for your age. Do not tell your parents we talk, okay?"},
+        {speaker:"receiver",text:"Why not? They usually check my messages."},
+        {speaker:"sender",text:"They would not understand our connection. Move to WhatsApp and send me your address so I can mail you a surprise."}
+      ],
+      "Ambiguous": [
+        {speaker:"sender",text:"What are you wearing to the party?"},
+        {speaker:"receiver",text:"Just jeans and a hoodie."},
+        {speaker:"sender",text:"Cool, see you there."}
+      ]
+    };
+
+    const select = document.getElementById("scenario");
+    for (const name of Object.keys(scenarios)) {
+      const opt = document.createElement("option");
+      opt.value = name;
+      opt.textContent = name;
+      select.appendChild(opt);
+    }
+
+    function parseCustom(text) {
+      return text.split(/\n+/).map(line => {
+        const m = line.match(/^(sender|receiver|adult|child|unknown):\s*(.*)$/i);
+        if (!m) return null;
+        return {speaker:m[1].toLowerCase(), text:m[2]};
+      }).filter(Boolean);
+    }
+
+    async function analyze(messages) {
+      const res = await fetch("/v1/evaluate", {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({platform:"demo", messages})
+      });
+      if (!res.ok) throw new Error("Backend error " + res.status);
+      return res.json();
+    }
+
+    function render(result) {
+      const threats = (result.threats_detected||[]).map(t=>`<span class="pill risk">${t}</span>`).join("") || "None";
+      const flagged = (result.flagged_messages||[]).map(m=>`<div class="msg"><b>${m.speaker}</b>: ${m.text}<br><span class="muted">${(m.reasons||[]).join(", ")}</span></div>`).join("") || "<p class='muted'>None</p>";
+      document.getElementById("result").innerHTML = `
+        <p><b>Danger rating:</b> ${result.danger_rating} &nbsp; <b>Confidence:</b> ${result.confidence_score}</p>
+        <p><b>Analysis mode:</b> ${result.fallback_used ? "Fallback (rules only)" : result.analysis_provider}</p>
+        <p><b>Recommended action:</b> ${result.recommended_action}</p>
+        <p><b>Threats:</b> ${threats}</p>
+        <p>${result.evaluation||""}</p>
+        <h4>Flagged messages</h4>
+        ${flagged}
+      `;
+    }
+
+    document.getElementById("analyze").addEventListener("click", async () => {
+      const name = select.value;
+      document.getElementById("result").textContent = "Analyzing...";
+      try { render(await analyze(scenarios[name])); }
+      catch (e) { document.getElementById("result").textContent = e.message; }
+    });
+
+    document.getElementById("custom").addEventListener("click", async () => {
+      const msgs = parseCustom(document.getElementById("customText").value);
+      if (!msgs.length) { document.getElementById("result").textContent = "No valid messages."; return; }
+      document.getElementById("result").textContent = "Analyzing...";
+      try { render(await analyze(msgs)); }
+      catch (e) { document.getElementById("result").textContent = e.message; }
+    });
+  </script>
+</body>
+</html>

@@ -135,6 +135,7 @@ async function loadView() {
       <div><b>Confidence</b>: ${escapeHtml(result.confidence_score)}</div>
       <div><b>Action</b>: ${escapeHtml(conciseActionLabel(result.recommended_action || "monitor"))}</div>
       <div><b>Threats</b>: <span>${renderThreatChips(result.threats_detected || [])}</span></div>
+      <div><b>Analysis mode</b>: ${escapeHtml(result?.fallback_used ? "Fallback (rules only)" : (result?.analysis_provider || "unknown"))}</div>
       <details style="margin-top:10px;">
         <summary style="cursor:pointer;font-size:12px;font-weight:600;color:#4b5563;padding:6px 0;list-style:none;display:flex;align-items:center;gap:6px;user-select:none;">
           <svg class="ht-chevron" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition:transform 150ms ease;flex-shrink:0"><polyline points="2 4 6 8 10 4"/></svg>

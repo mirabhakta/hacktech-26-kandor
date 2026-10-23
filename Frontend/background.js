@@ -249,16 +249,12 @@ async function postHtmlToBackend(html, pageUrl, pageText, messages, platform, ta
           : [],
         recommended_action: String(payload?.recommended_action || "none"),
         highest_risk_message: payload?.highest_risk_message ? String(payload.highest_risk_message) : null,
+        analysis_provider: String(payload?.analysis_provider || "unknown"),
+        fallback_used: Boolean(payload?.fallback_used),
         scanned_messages: Array.isArray(messages) ? messages.length : 0,
         platform: String(payload?.platform || platform || "generic"),
         tabId,
-        extracted_messages: Array.isArray(messages)
-          ? messages.map((item) => ({
-              speaker: String(item.speaker || "unknown"),
-              text: String(item.text || ""),
-              source: String(item.source || "generic")
-            }))
-          : []
+        scanned_messages: Array.isArray(messages) ? messages.length : 0
       };
       console.log("[Hacktech Safety] Received result", result);
       await setLastResult(tabId, result);
