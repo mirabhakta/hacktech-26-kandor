@@ -39,6 +39,29 @@ Hacktech 2026 — California Institute of Technology
 
 **Contributors:** Chris Rios, Mario Chong, Mira Bhakta, Jericho De Guzman
 
+## Running locally
+
+See `DEPLOYMENT.md`.
+
+Backend:
+
+```powershell
+cd Backend
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+copy .env.example .env
+python main.py
+```
+
+Then load the unpacked extension from `Frontend` and open `http://127.0.0.1:8000/demo`.
+
+## Testing
+
+```powershell
+.venv\Scripts\python.exe -m pytest tests -q
+```
+
 ## Links
 
 - 🌐 Landing page: [kandor.tech](https://kandor.tech)

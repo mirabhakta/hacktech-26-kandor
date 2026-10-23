@@ -1,0 +1,16 @@
+import pkg from "file:///C:/Users/miraa/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.js";
+const { chromium } = pkg;
+const browser = await chromium.launch();
+const page = await browser.newPage();
+let alerted = false;
+page.on('dialog', async d => { alerted = true; await d.dismiss(); });
+await page.goto("http://127.0.0.1:8000/demo");
+await page.click('[data-id="stranger"]');
+await page.waitForTimeout(1000);
+await page.fill("#messageInput", "<img src=x onerror=alert(1)> <script>alert(2)</script>");
+await page.click("#addMessage");
+await page.waitForTimeout(2000);
+const html = await page.content();
+console.log("alerted:", alerted);
+console.log("script tag present in DOM:", html.includes("<script>alert(2)</script>"));
+await browser.close();

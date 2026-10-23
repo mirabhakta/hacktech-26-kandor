@@ -1057,6 +1057,10 @@ function showBanner(result, threshold) {
     </div>
     <div style="font-size:12px;line-height:1.65;color:#374151">
       <div>${renderThreatChips(result.threats_detected || [])}</div>
+      <div style="margin-top:8px;font-size:11px;color:#6b7280;">
+        ${escapeHtml(result?.fallback_used ? "Fallback analysis active (rules only)" : (result?.analysis_provider ? `Analysis provider: ${result.analysis_provider}` : "Analysis complete"))}
+        ${window.location.pathname === "/demo" ? " · Demo conversation" : ""}
+      </div>
       ${
         evaluation
           ? `<div style="margin-top:10px;">${escapeHtml(evaluation)}</div>`

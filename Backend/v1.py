@@ -22,15 +22,22 @@ load_dotenv()
 # Initialize FastAPI router
 router = fastapi.APIRouter()
 client = None
-K2_API_URL = "https://api.k2think.ai/v1/chat/completions"
+
+# Provider configuration (credentials stay on the backend; never hardcode keys).
+KANDOR_PROVIDER = os.getenv("KANDOR_PROVIDER", "auto").strip().lower() or "auto"
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash").strip() or "gemini-2.5-flash"
+GEMINI_TIMEOUT_SECONDS = int(os.getenv("GEMINI_TIMEOUT_SECONDS", "25") or 25)
+K2_API_URL = os.getenv("K2_API_URL", "https://api.k2think.ai/v1/chat/completions").strip()
+K2_MODEL = os.getenv("K2_MODEL", "MBZUAI-IFM/K2-Think-v2").strip() or "MBZUAI-IFM/K2-Think-v2"
+K2_TIMEOUT_SECONDS = int(os.getenv("K2_TIMEOUT_SECONDS", "20") or 20)
 K2_HEADERS = {
     "accept": "application/json",
     "Content-Type": "application/json",
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36",
-    "Origin": "https://www.k2think.ai",
-    "Referer": "https://www.k2think.ai/",
+    "User-Agent": "kandor-backend",
 }
 RESULT_CACHE: dict[str, dict[str, Any]] = {}
+MAX_RESULT_CACHE_ENTRIES = int(os.getenv("KANDOR_MAX_RESULT_CACHE_ENTRIES", "256") or 256)
+MAX_ANALYSIS_TEXT_CHARS = int(os.getenv("KANDOR_MAX_ANALYSIS_TEXT_CHARS", "20000") or 20000)
 _SOCIAL_DOMAINS: set[str] = {
     "localhost",
     "127.0.0.1",
@@ -180,7 +187,7 @@ RISK_RULES = [
 
     PatternRule("SEXUAL_CONTENT", 45, r"\bnude\b", severity="critical"),
     PatternRule("SEXUAL_CONTENT", 45, r"\bshow me (your body|yourself)\b", severity="critical"),
-    PatternRule("SEXUAL_CONTENT", 34, r"\bwhat are you wearing\b", severity="high"),
+    PatternRule("SEXUAL_CONTENT", 34, r"\bwhat are you wearing\b(?!\s+(today|tomorrow)\b)(?!\s+(to|for)\s+(the|a|an|my|our|your)?\s*(party|school|event|wedding|picnic|game|concert|dinner)\b)", severity="high"),
     PatternRule("SEXUAL_CONTENT", 36, r"\bsend (me )?(a )?(pic|photo|selfie)\b", severity="high", sender_only_bonus=4),
     PatternRule("SEXUAL_CONTENT", 24, r"\bsexy\b"),
     PatternRule("SEXUAL_CONTENT", 28, r"\bturn me on\b", severity="high"),
@@ -861,7 +868,10 @@ def _fallback_evaluate(text: str, messages: list[dict[str, Any]] | None = None):
             if danger_rating >= 20
             else "none"
         ),
-        "highest_risk_message": highest_risk_message
+        "highest_risk_message": highest_risk_message,
+        "analysis_provider": "rules",
+        "fallback_used": True,
+        "model_output_validated": False,
     }
 
 
@@ -1022,10 +1032,10 @@ def _call_k2_classifier(analysis_text: str, messages: list[dict[str, Any]], plat
     )
 
     try:
-        with urllib.request.urlopen(request, timeout=20) as response:
+        with urllib.request.urlopen(request, timeout=K2_TIMEOUT_SECONDS) as response:
             raw = response.read().decode("utf-8")
-    except urllib.error.HTTPError:
-        logging.exception("K2 HTTP request failed")
+    except urllib.error.HTTPError as exc:
+        logging.warning("K2 HTTP request failed: status=%s", getattr(exc, "code", "unknown"))
         return None
     except Exception:
         logging.exception("K2 request failed")
@@ -1044,11 +1054,16 @@ def _call_k2_classifier(analysis_text: str, messages: list[dict[str, Any]], plat
     except json.JSONDecodeError:
         payload = _extract_json_object(raw)
 
-    if not payload:
+    if not payload or not isinstance(payload, dict):
+        return None
+    if not ({"danger_rating", "confidence", "confidence_score", "recommended_action", "threats_detected"} & set(payload.keys())):
         return None
 
     normalized = _normalize_result(payload)
     normalized["platform"] = platform or normalized.get("platform") or "generic"
+    normalized["analysis_provider"] = "k2"
+    normalized["fallback_used"] = False
+    normalized["model_output_validated"] = True
     return normalized
 
 @router.post("/evaluate")
@@ -1060,15 +1075,41 @@ async def evaluate(request: fastapi.Request):
 
     content_type = request.headers.get("content-type", "").lower()
     if "application/json" in content_type:
-        body = await request.json()
+        try:
+            body = await request.json()
+        except Exception:
+            raise fastapi.HTTPException(status_code=400, detail="Invalid JSON body")
+        if not isinstance(body, dict):
+            raise fastapi.HTTPException(status_code=400, detail="JSON body must be an object")
         html = str(body.get("html") or "")
         page_text = str(body.get("pageText") or "")
         platform = str(body.get("platform") or "generic").strip() or "generic"
+        if len(platform) > 50:
+            raise fastapi.HTTPException(status_code=400, detail="platform is too long")
         raw_messages = body.get("messages") or []
-        if isinstance(raw_messages, list):
-            messages = [item for item in raw_messages if isinstance(item, dict)]
+        if not isinstance(raw_messages, list):
+            raise fastapi.HTTPException(status_code=400, detail="messages must be a list")
+        if len(raw_messages) > 100:
+            raise fastapi.HTTPException(status_code=400, detail="too many messages")
+        messages = []
+        for item in raw_messages:
+            if not isinstance(item, dict):
+                continue
+            text = str(item.get("text") or "")
+            if len(text) > 5000:
+                raise fastapi.HTTPException(status_code=400, detail="message text too long")
+            speaker = str(item.get("speaker") or "unknown")
+            if len(speaker) > 50:
+                speaker = speaker[:50]
+            messages.append({"speaker": speaker, "text": text})
     else:
-        html = (await request.body()).decode("utf-8")
+        raw_body = await request.body()
+        if len(raw_body) > 2_000_000:
+            raise fastapi.HTTPException(status_code=413, detail="Request body too large")
+        html = raw_body.decode("utf-8", errors="replace")
+
+    if len(html) > 2_000_000:
+        raise fastapi.HTTPException(status_code=413, detail="HTML payload too large")
 
     page_text = _strip_meta_flight_blobs(page_text)
     cleaned_messages: list[dict[str, Any]] = []
@@ -1086,21 +1127,37 @@ async def evaluate(request: fastapi.Request):
     stripped_html = _strip_html_tags(html) if html else ""
     analysis_text = page_text.strip() or _format_messages(messages) or stripped_html
     analysis_text = _strip_meta_flight_blobs(analysis_text)
+    if len(analysis_text) > MAX_ANALYSIS_TEXT_CHARS:
+        analysis_text = analysis_text[:MAX_ANALYSIS_TEXT_CHARS]
     cache_key = _analysis_cache_key(platform, messages, analysis_text)
     cached_result = RESULT_CACHE.get(cache_key)
     if cached_result is not None:
         return dict(cached_result)
+    if len(RESULT_CACHE) >= MAX_RESULT_CACHE_ENTRIES:
+        try:
+            RESULT_CACHE.pop(next(iter(RESULT_CACHE)))
+        except (StopIteration, KeyError):
+            pass
     fallback = _fallback_evaluate(analysis_text, messages)
     fallback["platform"] = platform
+    fallback["analysis_provider"] = "rules"
+    fallback["fallback_used"] = True
+    fallback["model_output_validated"] = False
 
-    k2_result = _call_k2_classifier(analysis_text, messages, platform)
+    use_k2 = KANDOR_PROVIDER in {"auto", "k2", "ifm"}
+    use_gemini = KANDOR_PROVIDER in {"auto", "gemini", "google", "gemma"}
+
+    k2_result = _call_k2_classifier(analysis_text, messages, platform) if use_k2 else None
     if k2_result:
         k2_result = _merge_with_fallback(k2_result, fallback)
         confidence = int(k2_result.get("confidence_score") or 0)
         danger = int(k2_result.get("danger_rating") or 0)
-        if (danger <= 20 and confidence >= 60) or (danger >= 70 and confidence >= 70):
-            RESULT_CACHE[cache_key] = dict(k2_result)
-            return dict(k2_result)
+        # Only short-circuit for high-confidence K2 calls; otherwise continue to Gemini if enabled.
+        if KANDOR_PROVIDER == "k2" or ((danger <= 20 and confidence >= 60) or (danger >= 70 and confidence >= 70)):
+            if not use_gemini or KANDOR_PROVIDER == "k2":
+                k2_result["analysis_provider"] = "k2"
+                RESULT_CACHE[cache_key] = dict(k2_result)
+                return dict(k2_result)
 
     prompt = """You are a child safety classifier evaluating direct messages for signs of harm to minors. Assume the recipient is a child (under 13) unless explicitly stated otherwise.
 
@@ -1159,9 +1216,22 @@ async def evaluate(request: fastapi.Request):
     Do NOT treat UI labels, timestamp strings, like/reaction counts, or navigation text as message content
 
     Here is the extracted conversation transcript if available:\n\n""" + _format_messages(messages) + "\n\nHere is the page text to evaluate:\n\n" + analysis_text
+    if not use_gemini:
+        result = k2_result or fallback
+        if isinstance(result, dict):
+            result.setdefault("analysis_provider", "k2" if k2_result else "rules")
+            result.setdefault("fallback_used", k2_result is None)
+            result.setdefault("model_output_validated", k2_result is not None)
+        RESULT_CACHE[cache_key] = dict(result)
+        return dict(result)
+
     gemini_client = _get_client()
     if gemini_client is None:
         result = k2_result or fallback
+        if isinstance(result, dict):
+            result.setdefault("analysis_provider", "k2" if k2_result else "rules")
+            result.setdefault("fallback_used", k2_result is None)
+            result.setdefault("model_output_validated", k2_result is not None)
         RESULT_CACHE[cache_key] = dict(result)
         return dict(result)
 
@@ -1228,16 +1298,26 @@ async def evaluate(request: fastapi.Request):
             ),
         )
     except Exception as e:
-        logging.exception(f"Gemini call failed: {e}")
-        return _fallback_evaluate(analysis_text, messages)
+        logging.warning("Gemini call failed: %s", type(e).__name__)
+        result = k2_result or fallback
+        RESULT_CACHE[cache_key] = dict(result)
+        return dict(result)
 
     if not response or not response.text:
-        raise fastapi.HTTPException(status_code=502, detail="No response from Gemini")
+        logging.warning("Gemini returned no content; using fallback")
+        result = k2_result or fallback
+        RESULT_CACHE[cache_key] = dict(result)
+        return dict(result)
 
     try:
         parsed = json.loads(response.text)
+        if not isinstance(parsed, dict):
+            raise ValueError("Gemini response was not a JSON object")
         normalized = _normalize_result(parsed)
         normalized["platform"] = platform
+        normalized["analysis_provider"] = "gemini"
+        normalized["fallback_used"] = False
+        normalized["model_output_validated"] = True
         merged = _merge_with_fallback(normalized, fallback)
         if k2_result:
             merged["confidence_score"] = max(
@@ -1248,9 +1328,15 @@ async def evaluate(request: fastapi.Request):
                 merged["flagged_messages"] = k2_result.get("flagged_messages", [])
             if not merged.get("flagged_phrases"):
                 merged["flagged_phrases"] = k2_result.get("flagged_phrases", [])
+        merged["analysis_provider"] = "gemini"
+        merged["fallback_used"] = False
+        merged["model_output_validated"] = True
+        if "analysis_provider" not in merged:
+            merged["analysis_provider"] = "gemini"
         RESULT_CACHE[cache_key] = dict(merged)
         return dict(merged)
-    except json.JSONDecodeError:
+    except (json.JSONDecodeError, ValueError, TypeError):
+        logging.warning("Gemini returned malformed output; using fallback")
         result = k2_result or fallback
         RESULT_CACHE[cache_key] = dict(result)
         return dict(result)
