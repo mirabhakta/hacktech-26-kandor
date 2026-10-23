@@ -43,7 +43,7 @@ danger = await page.textContent("#danger");
 const status = await page.textContent("#analysisStatus");
 console.log("mia danger:", danger, "status:", status);
 if (Number(danger) >= 40) throw new Error("Expected low risk for safe conversation");
-if (!status.includes("No strong")) throw new Error("Expected safe status");
+if (!status.includes("no strong concern")) throw new Error("Expected safe status");
 
 // Simulate backend failure and ensure not shown as safe.
 await page.route("**/v1/evaluate", route => route.fulfill({ status: 500, body: "boom" }));

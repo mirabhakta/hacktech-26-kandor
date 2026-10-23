@@ -35,19 +35,25 @@ DEMO_HTML = r"""<!doctype html>
       display: flex; align-items: center; justify-content: space-between; gap: 16px;
       padding: 0 20px; background: var(--frame);
     }
-    .brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+    .brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
     .brand-mark {
-      width: 28px; height: 28px; border-radius: 8px; background: var(--accent); color: #fff;
-      display: grid; place-items: center; font-family: var(--display); font-weight: 700; font-size: 16px;
+      width: 32px; height: 32px; border-radius: 9px; background: var(--accent); color: #fff;
+      display: grid; place-items: center; font-family: var(--display); font-weight: 700; font-size: 18px;
+      flex: 0 0 auto;
     }
-    .brand h1 { margin: 0; font-family: var(--display); font-size: 20px; line-height: 1.1; letter-spacing: -.02em; font-weight: 700; }
-    .brand p { margin: 0; color: var(--muted); font-size: 12px; }
+    .brand h1 { margin: 0; font-family: var(--display); font-size: 24px; line-height: 1; letter-spacing: -.02em; font-weight: 700; }
+    .brand p { margin: 4px 0 0; color: var(--muted); font-size: 13px; line-height: 1.4; }
     .synthetic-note { color: var(--muted); font-size: 12px; text-align: right; }
     .viewtabs { display: none; gap: 6px; padding: 0 12px 8px; background: var(--frame); }
     .viewtabs button {
-      flex: 1; border: 0; background: transparent; border-radius: 8px; padding: 9px 6px;
-      font-size: 13px; font-weight: 700; color: var(--muted); cursor: pointer;
+      position: relative; flex: 1; border: 0; background: transparent; border-radius: 8px; padding: 11px 6px;
+      font-size: 13px; font-weight: 700; color: var(--muted); cursor: pointer; min-height: 44px;
     }
+    .tab-dot {
+      position: absolute; top: 8px; right: 14px; width: 8px; height: 8px;
+      border-radius: 50%; background: var(--danger);
+    }
+    .tab-dot[hidden] { display: none; }
     .viewtabs button.is-active { background: var(--accent-soft); color: var(--accent); }
     .viewtabs button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     .sheet {
@@ -80,7 +86,7 @@ DEMO_HTML = r"""<!doctype html>
     }
     .conversation-name { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .conversation-preview { color: var(--muted); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
-    .conversation-time { color: var(--muted); font-size: 11px; white-space: nowrap; }
+    .conversation-time { color: var(--muted); font-size: 12px; white-space: nowrap; }
     .chat-panel { min-width: 0; }
     .chat-header { padding: 14px 18px 10px; display: flex; align-items: center; gap: 12px; }
     .chat-name { font-size: 15px; font-weight: 700; }
@@ -102,13 +108,16 @@ DEMO_HTML = r"""<!doctype html>
     .bubble.has-evidence { border-left: 3px solid var(--evidence); }
     .outgoing .bubble.has-evidence { border-left-color: var(--accent); border-right: 3px solid var(--evidence); }
     .bubble.flash { outline: 2px solid var(--evidence); outline-offset: 2px; }
-    .message-meta { color: var(--muted); font-size: 11px; padding: 0 4px; }
+    .bubble:focus { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .message-meta { color: var(--muted); font-size: 12px; padding: 0 4px; }
     .composer { padding: 12px 18px 14px; background: var(--sheet); border-top: 1px solid var(--edge); border-radius: 0 0 0 0; }
-    .composer-row { display: flex; gap: 10px; align-items: flex-end; }
+    .composer-row { display: flex; gap: 10px; align-items: stretch; }
     .composer textarea {
-      flex: 1; min-height: 44px; max-height: 120px; resize: vertical; border: 1px solid var(--edge);
-      border-radius: 10px; padding: 11px 12px; background: #f7faf9; color: var(--text);
+      flex: 1; min-height: 48px; max-height: 120px; resize: vertical; border: 1px solid var(--edge);
+      border-radius: 10px; padding: 12px; background: #f7faf9; color: var(--text); font-size: 14px;
     }
+    .composer-row .button { align-self: flex-end; min-height: 48px; padding: 10px 18px; }
+    .composer-actions .button, .composer-actions .select { min-height: 44px; }
     .composer textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
     .button {
       border: 0; border-radius: 9px; padding: 10px 14px; background: var(--accent); color: #fff;
@@ -145,13 +154,19 @@ DEMO_HTML = r"""<!doctype html>
     .evidence-card:hover { background: var(--accent-soft); }
     .evidence-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     .evidence-card strong { display: block; font-size: 13px; margin-bottom: 4px; }
-    .evidence-card p { margin: 4px 0 0; color: var(--muted); font-size: 12px; line-height: 1.45; }
-    .limitations { color: var(--muted); font-size: 11px; line-height: 1.5; }
+    .evidence-card p { margin: 4px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+    .limitations { color: var(--muted); font-size: 12px; line-height: 1.5; }
+    @media (prefers-reduced-motion: reduce) {
+      * { animation: none !important; transition: none !important; }
+      html { scroll-behavior: auto; }
+    }
     @media (max-width: 1100px) {
       .sheet { grid-template-columns: 240px minmax(0, 1fr) 320px; }
     }
     @media (max-width: 1023px) {
-      .app { grid-template-rows: 48px auto 1fr; }
+      .app { grid-template-rows: auto auto 1fr; }
+      .topbar { padding: 10px 16px; align-items: flex-start; }
+      .brand h1 { font-size: 22px; }
       .viewtabs { display: flex; }
       .sheet { grid-template-columns: minmax(0, 1fr); overflow: hidden; }
       .panel { display: none; overflow: hidden; }
@@ -169,8 +184,8 @@ DEMO_HTML = r"""<!doctype html>
       <div class="brand">
         <div class="brand-mark" aria-hidden="true">K</div>
         <div>
-          <h1>Kandor safety review</h1>
-          <p>Synthetic conversation workspace</p>
+          <h1>Kandor</h1>
+          <p>Synthetic conversation demo — see how Kandor reviews risky chats</p>
         </div>
       </div>
       <div class="synthetic-note">All conversations are synthetic.<br />No real messages are used.</div>
@@ -179,7 +194,7 @@ DEMO_HTML = r"""<!doctype html>
     <nav class="viewtabs" aria-label="Views">
       <button type="button" data-view="inbox-panel">Conversations</button>
       <button type="button" data-view="chat-panel" class="is-active">Messages</button>
-      <button type="button" data-view="insights-panel">Insights</button>
+      <button type="button" data-view="insights-panel">Insights<span class="tab-dot" id="insightsDot" hidden aria-hidden="true"></span></button>
     </nav>
 
     <main class="sheet">
@@ -229,24 +244,25 @@ DEMO_HTML = r"""<!doctype html>
             <div class="risk-caption" id="riskCaption">Kandor will summarize concerns when analysis completes.</div>
           </div>
           <div>
-            <div class="insight-label">Analysis basis</div>
-            <div class="guidance" id="mode">Rule-based analysis. No paid model is used.</div>
-          </div>
-          <div>
-            <div class="insight-label">Recommended next step</div>
-            <div class="guidance" id="action">No action needed yet.</div>
+            <div class="insight-label">What Kandor noticed</div>
+            <div class="guidance" id="finding">Select a conversation to review its patterns.</div>
           </div>
           <div>
             <div class="insight-label">Detected signals</div>
             <div class="signal-list" id="threats"></div>
           </div>
           <div>
-            <div class="insight-label">Why this matters</div>
-            <div class="guidance" id="evaluation"></div>
+            <div class="insight-label">Message evidence</div>
+            <div class="guidance" style="margin-bottom:6px;">Select an item to see it in the conversation.</div>
+            <div class="evidence-list" id="flagged"></div>
           </div>
           <div>
-            <div class="insight-label">Message evidence</div>
-            <div class="evidence-list" id="flagged"></div>
+            <div class="insight-label">Recommended next step</div>
+            <div class="guidance" id="action">No action needed yet.</div>
+          </div>
+          <div>
+            <div class="insight-label">Analysis basis</div>
+            <div class="guidance" id="mode">Rule-based analysis. No paid model is used.</div>
           </div>
           <div class="risk-caption" id="scoreNote"></div>
           <div class="risk-caption" id="danger" hidden></div>
@@ -351,6 +367,26 @@ DEMO_HTML = r"""<!doctype html>
       const labels = { none: "No action needed.", monitor: "Continue monitoring the conversation.", warn_user: "Warn the person at risk.", block_and_alert_guardian: "Block the contact and alert a guardian." };
       return labels[action] || "Continue monitoring the conversation.";
     }
+    function findingText(threats, danger) {
+      if (!threats.length) {
+        return danger > 0
+          ? "One minor pattern stood out, but the overall conversation looks low concern."
+          : "Nothing in this conversation stood out as concerning.";
+      }
+      const names = threats.map(signalLabel);
+      const list = names.length > 1
+        ? names.slice(0, -1).join(", ") + " and " + names[names.length - 1]
+        : names[0];
+      return "This conversation shows signs of " + list.toLowerCase() + ". Review the flagged messages for context.";
+    }
+    function updateInsightsDot(danger) {
+      const dot = document.getElementById("insightsDot");
+      if (!dot) return;
+      dot.hidden = !(Number(danger) >= 40);
+    }
+    function reducedMotion() {
+      return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    }
     function signalLabel(signal) {
       const labels = { GROOMING: "Trust grooming", SEXUAL_CONTENT: "Sexual content", PII_SOLICITATION: "Personal information request", PLATFORM_MIGRATION: "Move off-platform", THREATS_COERCION: "Threats or coercion", SELF_HARM_CONTENT: "Self-harm content", HATE_HARASSMENT: "Harassment", FINANCIAL_SCAM: "Financial scam", OBFUSCATION: "Hidden language" };
       return labels[signal] || signal;
@@ -399,7 +435,7 @@ DEMO_HTML = r"""<!doctype html>
       const danger = Number(result?.danger_rating || 0);
       latestFlaggedTexts = new Set((Array.isArray(result?.flagged_messages) ? result.flagged_messages : []).map(item => normalizeText(item?.text)));
       const pill = document.getElementById("resultPill");
-      pill.textContent = danger >= 40 ? riskLevel(danger) : (danger > 0 ? riskLevel(danger) : "No strong concern");
+      pill.textContent = danger >= 40 ? "Needs review" : "Reviewed";
       pill.className = danger >= 40 ? "pill-risk" : "pill-safe";
       pill.id = "resultPill";
       document.getElementById("riskLevel").textContent = riskLevel(danger);
@@ -424,9 +460,8 @@ DEMO_HTML = r"""<!doctype html>
           threatsEl.appendChild(chip);
         }
       }
-      document.getElementById("evaluation").textContent = result?.fallback_used
-        ? "Kandor's built-in rules matched wording and patterns in this conversation that are often associated with risk. A person should review the flagged messages above."
-        : (result?.evaluation || "");
+      document.getElementById("finding").textContent = findingText(threats, danger);
+      updateInsightsDot(danger);
       const flagged = Array.isArray(result?.flagged_messages) ? result.flagged_messages : [];
       const flaggedEl = document.getElementById("flagged");
       flaggedEl.replaceChildren();
@@ -451,9 +486,15 @@ DEMO_HTML = r"""<!doctype html>
             if (index < 0) return;
             const bubble = document.getElementById("msg-" + index);
             if (!bubble) return;
-            bubble.scrollIntoView({ block: "center", behavior: "smooth" });
+            if (window.matchMedia("(max-width: 1023px)").matches) setMobileView("chat-panel");
+            bubble.scrollIntoView({ block: "center", behavior: reducedMotion() ? "auto" : "smooth" });
+            bubble.setAttribute("tabindex", "-1");
+            bubble.focus({ preventScroll: true });
             bubble.classList.add("flash");
-            setTimeout(() => bubble.classList.remove("flash"), 1600);
+            setTimeout(() => {
+              bubble.classList.remove("flash");
+              bubble.removeAttribute("tabindex");
+            }, 1600);
           });
           flaggedEl.appendChild(card);
         });
@@ -476,8 +517,8 @@ DEMO_HTML = r"""<!doctype html>
       const status = document.getElementById("analysisStatus");
       status.className = "insight-state " + (danger >= 40 ? "warning" : "safe");
       status.textContent = danger >= 40
-        ? "Kandor found a concerning pattern in this synthetic conversation."
-        : "No strong concerning pattern was detected in this synthetic conversation.";
+        ? "Review complete — concerning pattern found."
+        : "Review complete — no strong concern.";
       renderMessages();
     }
 
@@ -499,7 +540,8 @@ DEMO_HTML = r"""<!doctype html>
       none.className = "risk-caption";
       none.textContent = "No signals reported.";
       threatsEl.appendChild(none);
-      document.getElementById("evaluation").textContent = "";
+      document.getElementById("finding").textContent = "No finding was produced because the analysis did not complete.";
+      updateInsightsDot(0);
       const flaggedEl = document.getElementById("flagged");
       flaggedEl.replaceChildren();
       const failed = document.createElement("div");
@@ -550,6 +592,7 @@ DEMO_HTML = r"""<!doctype html>
       currentMessages = conversation.messages.map(message => ({ ...message }));
       lastSignature = "";
       latestFlaggedTexts = new Set();
+      updateInsightsDot(0);
       renderMessages();
       messageInput.value = "";
       document.getElementById("analysisStatus").className = "insight-state";
